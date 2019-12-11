@@ -163,27 +163,30 @@
 		<property name="name" value="Edureka"></property>
     </bean>
     ```
+    
     基于注解配置
       您可以通过在相关的类，方法或字段声明上使用注解，将 bean 配置为组件类本身，而不是使用 XML 来描述 bean 装配。默认情况下，Spring 容器中未打开注解装配。因此，您需要在使用它之前在 Spring 配置文件中启用它。例如：
-      ```xml
+    ```xml
     <beans>
-	<context:annotation-config/>
-	<!-- bean definitions go here -->
+		<context:annotation-config/>
+		<!-- bean definitions go here -->
 </beans>
-      ```
+    ```
+    
     基于Java API配置
       Spring的Java配置是用过使用@Bean和@Configuration来实现。
       1. @Bean注解扮演与元素相同的角色。
       2. @Configuration类允许通过简单地调用同一个类中的其它@Bean方法来定义bean间的依赖关系。
     
-        例如：
+    例如：
+
       ```java
-@Configuration
+    @Configuration
     public class StudentConfig {
     	@Bean
-    	public StudentBean myStudent() {
+		public StudentBean myStudent() {
         	return new StudentBean();
-		}
+    	}
     }
       ```
     
@@ -194,7 +197,7 @@
       3. Request：每一次HTTP请求都会产生一个新的实例，并且该Bean仅在当前HTTP Session内有效。
       4. Global-Session：类似于标准的HTTP Session作用域，不过它不仅仅在基于protlet的web应用中才有意义。Portlet规范定义了全局Session的概念，它被所有构成某个portlet web应用的各种不同的 portlet 所共享。在 global session 作用域中定义的 bean 被限定于全局 portlet Session 的生命周期范围内。如果你在 web 中使用 global session 作用域来标识 bean，那么 web 会自动当成 session 类型来使用。
     
-        仅当用户使用支持Web的ApplicationContext时，最后三个才可用。
+    仅当用户使用支持Web的ApplicationContext时，最后三个才可用。
     
 4. Spring Bean容器的生命周期是什么样的？
     Spring Bean容器的生命周期流程如下：
@@ -207,43 +210,43 @@
       7. 最后，如果存在与bean关联的任何BeanPostProcessors，则将调用postProcessAfterInitialization()方法。
       8. 如果bean实现DisposableBean接口，当Spring容器关闭时，会调用destory()。
       9. 如果为bean指定了destroy方法(destroy-method属性)，那么将调用它。
-    
-        ![avator](./images/0038204c-4b8a-42a5-921d-080f6674f990.png)
+    ![avator](./images/0038204c-4b8a-42a5-921d-080f6674f990.webp)
     
 5. 什么是Spring 的内部 Bean？
     只有将bean用作另一个bean的属性时，才能将bean声明为内部bean。为了定义bean，Spring的基于XML的配置元数据在<property>或<constructor-arg>中提供了<bean>元素的使用。内部bean总是匿名的，它们总是作为原型。
     例如，假设我们有一个Student类，其中引用了Person类。这里我们将只创建一个Person类实例并在Student中使用它。
     Student.java
+    
     ```java
     public class Student {
     	private Person person;
-    	//Setters and Getters
+	//Setters and Getters
 }
-public class Person {
+    public class Person {
     	private String name;
     	private String address;
-    	//Setters and Getters
-}
+	//Setters and Getters
+    }
     ```
+    
     bean.xml
     ```xml
     <bean id=“StudentBean" class="com.edureka.Student">
     <property name="person">
         <!--This is inner bean -->
         <bean class="com.edureka.Person">
-            <property name="name" value=“Scott"></property>
-            <property name="address" value=“Bangalore"></property>
+            <property name="name" value=“Scott" />
+            <property name="address" value=“Bangalore" />
         </bean>
-    </property>
-</bean>
-```
+</property>
+    </bean>
+    ```
     
 6. Spring中的单例Bean的线程安全问题
     大部分时候我们并没有在系统中使用多线程，所以很少有人会关注这个问题。单例bean存在线程问题，主要是因为当多个线程操作同一个对象的时候，对这个对象的非静态成员变量的写操作会存在线程安全问题。
     常见的有两种解决办法：
-      1. 在Bean对象中尽量避免定义可变的成员变量(不太现实)。
-      2. 在类中定义一个ThreadLocal成员变量，将需要的可变成员变量保存在ThreadLocal中(推荐的一种方式。)
-    
+      - 在Bean对象中尽量避免定义可变的成员变量(不太现实)。
+      - 在类中定义一个ThreadLocal成员变量，将需要的可变成员变量保存在ThreadLocal中(推荐的一种方式。)
     
 7. 什么是Spring装配
     当bean在Spring容器中组合在一起时，它被称为装配或bean装配。Spring容器需要知道需要什么bean以及容器应该如何使用依赖注入将bean绑定在一起，同时装配bean。
@@ -288,36 +291,31 @@ public class Person {
 
 
 ### 五、数据访问
-  - Spring DAO有什么用？
-  - 列举Spring DAO抛出的异常？
-  - Spring JDBC API 中存在哪些类？
-  - 使用 Spring 访问 Hibernate 的方法有哪些？
-  - Spring 支持哪些 ORM 框架
-  - 使用 Spring 支持的事务管理类型
-  - Spring管理事务的方式有几种？
-  - Spring事务中的隔离级别有哪几种？
-  - Spring事务中哪几种事务传播行为？
-  - @Transactional(rollbackFor=Exception.class)注解了解吗？
-- AOP切面编程
-  - 什么是AOP？
-  - Spring AOP实现原理
-  - AOP中的Asepect、Advice、Pointcut、JoinPoint和Advice参数分别是什么？
-  - 什么是通知(Advice)？
-  - 有哪些类型的通知（Advice）？
-  - 指出在Spring AOP 中 concern 和cross-cutting concern 的不同之处。
-  - AOP有哪些实现方式？
-  - Spring AOP and AspectJ AOP 有什么区别？
-  - 如何理解 Spring 中的代理？
-  - 什么是编织(Weaving)？
-- MVC
-  - Spring MVC 框架有什么用？
-  - 描述一下 DispatcherServlet 的工作流程
-  - 介绍一下 WebApplicationContext
-  - Spring MVC中常用的注解有哪些？
-```
+1. Spring DAO有什么用？
+2. 列举Spring DAO抛出的异常？
+3. Spring JDBC API 中存在哪些类？
+4. 使用 Spring 访问 Hibernate 的方法有哪些？
+5. Spring 支持哪些 ORM 框架
+6. 使用 Spring 支持的事务管理类型
+7. Spring管理事务的方式有几种？
+8. Spring事务中的隔离级别有哪几种？
+9. Spring事务中哪几种事务传播行为？
+10. @Transactional(rollbackFor=Exception.class)注解了解吗？
 
-```
+### 六、AOP切面编程
+1. 什么是AOP？
+2. Spring AOP实现原理
+3. AOP中的Asepect、Advice、Pointcut、JoinPoint和Advice参数分别是什么？
+4. 什么是通知(Advice)？
+5. 有哪些类型的通知（Advice）？
+6. 指出在Spring AOP 中 concern 和cross-cutting concern 的不同之处。
+7. AOP有哪些实现方式？
+8. Spring AOP and AspectJ AOP 有什么区别？
+9. 如何理解 Spring 中的代理？
+10. 什么是编织(Weaving)？
 
-  ```
-
-  ```
+### 七、MVC
+1. Spring MVC 框架有什么用？
+2. 描述一下 DispatcherServlet 的工作流程
+3. 介绍一下 WebApplicationContext
+4. Spring MVC中常用的注解有哪些？
