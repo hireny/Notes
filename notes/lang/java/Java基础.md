@@ -5,7 +5,7 @@
 - 三、运算
 - 四、关键字
 - 五、嵌套类
-- 六、String类
+- 六、String
 - 七、Object类
 - 参考资料
 
@@ -91,10 +91,10 @@ public static void main(String[] args) {
 
 ## 缓存池
 
-new Integer(123) 与 Integer.valueOf(123) 的区别在于：
+`new Integer(123)` 与 `Integer.valueOf(123)` 的区别在于：
 
-- new Integer(123) 每次都会新建一个对象；
-- Integer.valueOf(123) 会使用缓存池中的对象，多次调用会取得同一个对象的引用。
+- `new Integer(123)` 每次都会新建一个对象；
+- `Integer.valueOf(123)` 会使用缓存池中的对象，多次调用会取得同一个对象的引用。
 
 ```java
 Integer x = new Integer(123);
@@ -105,7 +105,7 @@ Integer k = Integer.valueOf(123);
 System.out.println(z == k);   // true
 ```
 
-valueOf() 方法的实现比较简单，就是先判断值是否在缓存池中，如果在的话就直接返回缓存池的内容。
+`valueOf()` 方法的实现比较简单，就是先判断值是否在缓存池中，如果在的话就直接返回缓存池的内容。
 
 ```java
 public static Integer valueOf(int i) {
@@ -188,9 +188,15 @@ System.out.println(m == n); // true
 
 所谓继承，是从已有类的定义作为基础创建新类的过程。通过继承创建的新类称为"子类"或"派生类"，被继承的类称为"基类"、"父类"或"超类"。继承的过程，就是从一般到特殊的过程。要实现继承，可以通过"继承（Inheritance）"和"组合（Composition）"来实现。继承概念的实现方式有两类：实现继承与接口继承。实现继承是指直接使用基类的属性和方法而无需额外编码的能力；接口继承是指仅使用属性和方法的名称、但是子类必须提供实现的能力。
 
+**关于继承如下3点请记住：**  
+
+1. 子类拥有父类对象所有的属性和方法（包括私有属性和私有方法），但是父类汇总的私有属性和方法子类是无法访问，只是拥有。
+2. 子类可以拥有自己属性和方法，即子类可以对父类进行扩展。
+3. 子类可以用自己的方法实现父类的方法。
+
 **多态（Polymorphism）**
 
-所谓多态就是指一个类实例的相同方法在不同情形有不同表现形式。多态机制使具有不同内部结构的对象可以共享相同的外部接口。这意味着，虽然针对不同的对象的具体操作不同，但通过一个公共的类，它们可以通过相同的方式予以调用。
+所谓多态就是指程序中定义的引用变量所指向的具体类型和通过该引用变量发出的方法调用在编程时并不确定，而是在程序运行期间才确定，即一个引用变量到底会指向哪个类的实例对象，该引用变量发出的方法调用到底是哪个类中实现的方法，必须在由程序运行期间才能决定。
 
 在Java中有两种形式可以实现多态：继承（多个子类对同一方法的重写）和接口（实现接口并覆盖接口中同一方法）。
 
@@ -298,6 +304,11 @@ public static void main(String[] args) {
     ba.show(d); // A.show(C)
 }
 ```
+
+>构造器Constructor是否可被 override?
+>	Constructor不能被override（重写），但是可以overload（重载），所以你可以看到一个类中有多个构造函数的情况。
+
+
 
 **2. 重载（Overload）** 
 
@@ -496,9 +507,20 @@ System.out.println(InterfaceExample.x);
 **3. 比较**  
 
 - 从设计层面上看，抽象类提供了一种 IS-A 关系，需要满足里式替换原则，即子类对象必须能够替换掉所有父类对象。而接口更像是一种 LIKE-A 关系，它只是提供一种方法实现契约，并不要求接口和实现接口的类具有 IS-A 关系。
-- 从使用上来看，一个类可以实现多个接口，但是不能继承多个抽象类。
-- 接口的字段只能是 public static final类型的，而抽象类的字段没有这种限制。
-- 接口的成员只能是 public 的，而抽象类的成员可以有多种访问权限。
+- 从使用上来看，一个类可以实现多个接口，但只能实现一个抽象类。接口字节本身可以通过`extends`关键字扩展多个接口。
+- 接口中除了`static`、`final`变量，不能有其它变量，，而抽象类中则不一定。
+- 接口方法默认修饰符是`public`，抽象方法可以有`public`、`protected`和`default`这些修饰符（抽象方法就是为了被重写所以不能使用`private`关键字修饰！）。
+- 接口的方法默认是`public`，所有方法在接口中不能有实现（Java 8开始接口方法可以有默认实现），而抽象类可以有非抽象的方法。
+
+> 备注：
+> 	1. 在JDK8 中，接口也可以定义静态方法，可以直接用接口名调用。实现类和实现是不可以调用的。如果同时实现两个接口，接口中定义了一样的默认方法，则必须重写，不然会报错。
+> 	2. JDK9 的接口被允许定义私有方法。
+
+总结一下 JDK7~JDK9 Java中接口概念的变化
+
+1. 在JDK7或更早版本中，接口里面只能有常量变量和抽象方法。这些接口方法必须由选择实现接口的类实现。
+2. JDK8的时候接口可以有默认方法和静态方法功能。
+3. JDK9在接口中引入了私有方法和私有静态方法
 
 **4. 使用选择**  
 
@@ -880,7 +902,7 @@ num指定了将value中的值向左移动的次数，对于高阶位，每次左
 
 # 四、关键字
 
-## 关键字总览
+## 4.1、关键字总览
 
 <table class="table table-bordered table-striped table-condensed">
 	<tr>
@@ -965,7 +987,7 @@ num指定了将value中的值向左移动的次数，对于高阶位，每次左
 	</tr>
 </table>
 
-## 关键字含义
+## 4.2、关键字含义
 
 |关键字|含义|
 |---|---|
@@ -1020,7 +1042,7 @@ num指定了将value中的值向左移动的次数，对于高阶位，每次左
 |volatile|表明两个或者多个变量必须同步地发生变化|
 |while|用在循环结构中|
 
-## 重要关键字说明
+## 4.3、重要关键字说明
 
 ### final
 
@@ -1311,6 +1333,8 @@ public static void main(String[] args) {
 
 # 六、String
 
+> 字符串操作毫无疑问是计算机程序设计中最常见的行为之一。
+
 ## 6.1、概述
 
 String被声明为 final，因此它不可被继承。（Integer等包装类也不能被继承）
@@ -1331,6 +1355,7 @@ public final class String
 public final class String
     implements java.io.Serializable, Comparable<String>, CharSequence {
     /** The value is used for character storage. */
+    @Stable
     private final byte[] value;
 
     /** The identifier of the encoding used to encode the bytes in {@code value}. */
@@ -1338,6 +1363,12 @@ public final class String
 }
 ```
 value 数组被声明为 final，这意味着 value 数组初始化之后就不能再引用其它数组。并且 String 内部没有改变 value 数组的方法，因此可以保证 String 不可变。
+
+**字符型常量和字符串常量的区别？**  
+
+1. 形式上：字符常量是单引号引起的一个字符；字符串常量是双引号引起的若干个字符
+2. 含义上：字符常量相当于一个整形值（ASCII值），可以参加表达式运算；字符串常量代表一个地址值（该字符串以内存中存放位置）
+3. 占内存大小：字符常量只占2个字节；字符串常量占若干个字节（注意：char在Java中占两个字节）
 
 ## 6.2、不可变的好处
 
@@ -1363,14 +1394,25 @@ String 不可变性天生具备线程安全，可以在多个线程中安全地�
 
 **1.可变性**  
 
-- String不可变
-- StringBuffer和StringBuilder可变
+- String是被`final`关键字修饰的字符数组来保存字符串（Java 9 之后，使用byte数组存储字符串），所以String是不可变的
+- StringBuffer和StringBuilder都继承自AbstractStringBuilder类，在AbstractStringBuilder中也是使用字符数组保存字符串（Java 9 之后，使用byte数组存储），但是没用 `final` 关键字修饰，所以这两种对象都是可变的。
 
 **2.线程安全**  
 
-- String不可变，因此是线程安全的
-- StringBuilder不是线程安全的
-- StringBuffer是线程安全的，内部使用synchronized进行同步
+- String不可变，因此是线程安全的。
+- StringBuffer对内部使用synchronized进行同步，所以是线程安全的。
+- StringBuilder并没有对方法进行加同步锁，所以是非线程安全的。
+
+**3.性能**  
+
+- 每次对String 类型进行改变的时候，都会生成一个新的String对象，然后将指针指向新的String对象。
+- StringBuilder每次都会对StringBuilder对象本身进行操作，而不是生成新的对象并改变对象引用。相同情况下使用StringBuilder相比使用StringBuffer仅能获得10%~15%左右的性能提升，但却要猫多线程不安全的风险。
+
+**对于三者使用的总结**  
+
+1. 操作少量的数据：适用String
+2. 单线程操作字符串缓冲区下操作大量数据：适用StringBuilder
+3. 多线程操作字符串缓冲区下操作大量数据：适用StringBuffer
 
 ## 6.4、String Pool
 
@@ -1475,70 +1517,61 @@ public final void wait() throws InterruptedException {}
 
 **1.等价关系**  
 
-两个对象具有等价关系，需要满足以下五个条件：
+`equals`方法实现了等价关系，其属性如下：
 
-I 自反性
-
-```java
-x.equals(x);	// true
-```
-
-II 对称性
-
-```java
-x.equals(y) == y.equals(x);	// true
-```
-
-III 传递性
-
-```java
-if (x.equals(y) && y.equals(z)) {
-	x.equals(z);	// true
-}
-```
-
-IV 一致性
-
-多次调用 equals() 方法结果不变
-
-```java
-x.equals(y) == x.equals(y);		// true
-```
-
-V 与null的比较
-
-对任何不是 `null` 的对象 `x` 调用 `x.equals(null)` 结果都为 `false`
-
-```java
-x.equals(null);	// false
-```
+- I 自反性：对于任何非null的引用值x，`x.equals(x)`必须返回true
+- II 对称性：对于任何非null的引用值x和y，当且仅当`y.equals(x)`返回true时，`x.equals(y)`必须返回true
+- III 传递性：对于任何非null的引用值x、y和z，如果`x.equals(y)`返回true，并且`y.equals(z)`返回true，那么`x.equals(z)`也必须返回true
+- IV 一致性：对于任何非null的引用值x和y，只要`equals`的比较操作在对象中所用的信息没有被修改，多次调用`x.equals(y)`就会一直地返回true，或者一致地返回false
+- V 与null的比较：对于任何非null的引用值x，`x.equals(null)`必须返回false
 
 **2.等价与相等**  
 
 - 对于基本类型，== 判断两个值是否相等，基本类型没有 `equals()` 方法。
 - 对于引用类型，== 判断两个变量是否引用同一个对象，而 `equals()` 判断引用的对象是否等价。
 
+`equals()`分为两种使用情况：
+
+- 情况1：类没有覆盖`equals()`方法。则通过`equals()`比较该类的两个对象时，等价于通过"=="比较这两个对象。
+- 情况2：类覆盖了`equals()`方法。一般，我们都覆盖`equals()`方法来比较两个对象的内容是否相等；若它们的内容相等，则返回true（即，认为这两个对象相等）。
+
 ```java
-Integer x = new Integer(1);
-Integer y = new Integer(1);
-x.equals(y);		// true
-x == y				// false
+public class EqualsExample {
+    public static void main(String[] args) {
+        String testA = new String("abc");   //testA为一个引用
+        String testB = new String("abc");   //testB为另一个引用，对象的内容一样
+        String testAa = "abc";  //放在常量池中
+        String testBb = "abc";  //从常量池中查找
+        if (testA == testB) {   // false，非同一个对象
+            System.out.println("testA==testB");
+        }
+        if (testAa == testBb) { //true，同一对象
+            System.out.println("testAa==testBb");
+        }
+        if (testA.equals(testB)) {  // true
+            System.out.println("testA.equals(testB) == true");
+        }
+        if (42 == 42.0) {   // true
+            System.out.println("true");
+        }
+    }
+}
 ```
 
 **3.实现**  
 
-- 检查是否为同一个对象的引用，如果是直接返回true
-- 检查是否是同一个类型，如果不是，直接返回false
-- 将Object对象进行转型
-- 判断每个关键域是否相等
+- 使用 `==` 操作符检查 "参数是否为这个对象的引用"。如果是，则返回true。
+- 使用 `instanceof` 操作符检查 "参数是否为正确的类型"。如果不是，则返回false。
+- 把参数转换成正确的类型。因为转换之前进行过 `instanceof` 测试，所以确保会成功。
+- 对于该类中的每个 "关键“（significant）域，检查参数中的域是否与该对象中对应的域相匹配。
 
 ```java
-public class Example {
+public class EqualsExample {
 	private int x;
 	private int y;
 	private int z;
 	
-	public Example(int x, int y, int z) {
+	public EqualsExample(int x, int y, int z) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
@@ -1549,7 +1582,7 @@ public class Example {
 		if (this == obj) return true;
 		if (obj == null || getClass() != obj.getClass()) return false;
 		
-		Example other = (Example) obj;
+		EqualsExample other = (EqualsExample) obj;
 		
 		return (x == other.x && y == other.y && z == other.z); 
 	}
@@ -1560,11 +1593,11 @@ public class Example {
 
 `hashCode()`返回哈希值，而`equals()`是用来判断两个对象是否等价。等价的两个对象散列值一定相同，但是散列值相同的两个对象不一定等价，这是因为计算哈希值具有随机性，两个值不同的对象可能计算出相同的哈希值。
 
-在覆盖 `equals()` 方法时应总是覆盖 `hashCode()` 方法，保证等价的两个对象哈希值也相等。
+在覆盖 `equals()` 方法时应总是覆盖 `hashCode()` 方法，保证相等的对象具有相等的散列码（hash code）。
 
 `HashSet`和`HashMap`等集合类使用了`hashCode()`方法来计算对象应该存储的位置，因此要将对象添加到这些集合类中，需要让对应的类实现 `hashCode()` 方法。
 
-下面的代码中，新家了两个等价的对象，并将它们添加到 `HashSet` 中。我们希望将这两个对象当成一样的，只在集合中添加一个对象。但是 `Example` 没有实现 `hashCode()` 方法，因此这两个对象的哈希值是不同的，最终导致集合添加了两个等价的对象。
+下面的代码中，新键了两个等价的对象，并将它们添加到 `HashSet` 中。我们希望将这两个对象当成一样的，只在集合中添加一个对象。但是 `Example` 没有实现 `hashCode()` 方法，因此这两个对象的哈希值是不同的，最终导致集合添加了两个等价的对象。
 
 ```java
 Example e1 = new Example(1, 1, 1);
@@ -1591,15 +1624,20 @@ public int hashCode() {
 }
 ```
 
+> hashCode()与equals()的相关规定
+> 	1. 如果连个对象相等，则hashCode一定也是相同的
+> 	2. 两个对象相等，对两个独享分别调用equals方法都返回true
+> 	3. 两个独享有相同的hashCode值，它们也不一定是相等的
+> 	4. equals方法被覆盖过，则hashCode方法也必须被覆盖
+> 	5. hashCode()的默认行为是对堆上的对象产生独特值。如果没有重写hashCode()，则该class的两个对象无论如何都不会相等（即使这两个对象指向相同的数据）
+
 ## 6.4、toString()
 
 默认返回 ToStringExample@4554617c这种形式，其中 @ 后面的数值为散列码的无符号十六进制表示。
 
 ```java
 public class ToStringExample {
-
     private int number;
-
     public ToStringExample(int number) {
         this.number = number;
     }
@@ -1613,6 +1651,31 @@ System.out.println(example.toString());
 
 ```java
 ToStringExample@4554617c
+```
+
+我们创建一个类始终要覆盖`toString()`,`toString`的通用约定指出，被返回的字符串应该是一个"简洁的单信息丰富，并且易于阅读的表达形式"。
+
+在实际应用中，toString方法应该返回对象包含的所有值得关注的信息，例如上面的类，我们需要返回`ToStringExample`类中的属性信息来表明该类的意图：
+
+```java
+public class ToStringExample {
+    private int number;
+    public ToStringExample(int number) {
+        this.number = number;
+    }
+    @Override
+    public String toString() {
+    	return "ToStringExample{" + 
+    			"number=" + number + 
+    			'}';
+    }
+}
+```
+
+输出的话就是如下内容：
+
+```java
+ToStringExample{number=123}
 ```
 
 ## 6.5、clone()
@@ -1769,7 +1832,7 @@ System.out.println(e2.get(2)); // 2
 
 **4.clone()的替代方案**  
 
-使用 `clone()` 方法来拷贝一个对象即复杂又有风险，它会抛出异常，并且还需要类型转换。Effective Java书上讲到，最好不要去使用 `clone()` ，可以使用拷贝构造函数或者拷贝工厂来拷贝一个对象。
+使用 `clone()` 方法来拷贝一个对象即复杂又有风险，它会抛出异常，并且还需要类型转换。Effective Java书上讲到，最好不要去使用 `clone()` ，可以使用拷贝构造器（copy constructor）或者拷贝工厂（copy factory）来拷贝一个对象。
 
 ```java
 public class CloneConstructorExample {
