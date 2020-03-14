@@ -1,5 +1,7 @@
 # 如何消除繁琐的if else语句
 
+## 一、简介
+
 if判断语句是很多编程语言的重要组成部分。但是，若我们最终编写了大量嵌套的if语句，这将使得我们的代码更加复杂和难以维护。
 
 让我们看看能否使用别的方式来做呢。
@@ -7,17 +9,16 @@ if判断语句是很多编程语言的重要组成部分。但是，若我们最
 设计模式是为了更好的代码重用性，可读性，可靠性，可维护性，它有六大原则
 
 ```
-1)单一职责原则（Single Responsibility Principle，简称SRP）:该原则是针对类来说的，即一个类应该只负责一项职责.
-　　　　　　2)开放--封闭原则（The Open-Closed Principle简称OCP）:是说软件实体（类、模块、函数等等）应该可以扩展，但是不可以修改。
-　　　　　　3)依赖倒转原则（Dependence Inversion Principle :针对接口编程，不要对实现编程
-　　　　　　4)里氏代换原则（Liskov Substitution Principle，简称LSP）:里氏代换原则，子类型必须能够替换掉他们的父类型
-　　　　　　5)迪米特法则（Law of Demeter）:如果两个类不必彼此直接通信，那么这两个类就不应当发生直接的相互作用
-　　　　　　6)合成/聚合复用原则（Composition/Aggregation Principle]，简称CARP）:尽量使用合成/聚合，尽量不使用类继承。合成聚合是“has  a”的关系，而继承是“is  a”的关系。
+	1)单一职责原则（Single Responsibility Principle，简称SRP）:该原则是针对类来说的，即一个类应该只负责一项职责.
+	2)开放--封闭原则（The Open-Closed Principle简称OCP）:是说软件实体（类、模块、函数等等）应该可以扩展，但是不可以修改。
+	3)依赖倒转原则（Dependence Inversion Principle :针对接口编程，不要对实现编程
+	4)里氏代换原则（Liskov Substitution Principle，简称LSP）:里氏代换原则，子类型必须能够替换掉他们的父类型
+	5)迪米特法则（Law of Demeter）:如果两个类不必彼此直接通信，那么这两个类就不应当发生直接的相互作用
+	6)合成/聚合复用原则（Composition/Aggregation Principle]，简称CARP）:尽量使用合成/聚合，尽量不使用类继承。合成聚合是“has  a”的关系，而继承是“is  a”的关系。
 ```
 
-示例
 
-if...else
+`if...else`语句实现的计算器的加减乘除与取模功能：
 ```java
 public int calculate(int a, int b, String operator) {
         int result = Integer.MIN_VALUE;
@@ -37,9 +38,9 @@ public int calculate(int a, int b, String operator) {
     }
 ```
 
-case-switch
+`switch`语句实现的加减乘除与取模功能：
 ```java
-public int calculateUsingSwitch(int a, int b, String operator) {
+public int calculate(int a, int b, String operator) {
         int result = 0;
         switch (operator) {
             case "add":
@@ -64,16 +65,20 @@ public int calculateUsingSwitch(int a, int b, String operator) {
     }
 ```
 
+## 二、工厂 + 策略模式
+
 重构
-工厂模式加策略模式
+使用工 模式+策略模式来消除 `if/else` 语句
+
 抽象层
+
 ```java
 public interface Operation {
     int apply(int a, int b);
 }
 ```
 
-加法实现Addition.java
+加法的实现类：
 ```java
 public class Addition implements Operation {
     @Override
@@ -83,7 +88,7 @@ public class Addition implements Operation {
 }
 ```
 
-减法实现Subtraction.java
+减法的实现类：
 ```java
 public class Subtraction implements Operation {
         @Override public int apply(int a, int b) {
@@ -92,7 +97,7 @@ public class Subtraction implements Operation {
 }
 ```
 
-乘法实现Multiplication.java
+乘法的实现类：
 ```java
 public class Multiplication implements Operation {
         @Override public int apply(int a, int b) {
@@ -101,7 +106,7 @@ public class Multiplication implements Operation {
 }
 ```
 
-除法实现Division.java
+除法的实现类：
 ```java
 public class Division implements Operation {
         @Override public int apply(int a, int b) {
@@ -109,7 +114,8 @@ public class Division implements Operation {
         }
 }
 ```
-求余实现Modulo.java
+
+求余的实现类：
 ```java
 public class Modulo implements Operation {
         @Override public int apply(int a, int b) {
@@ -118,7 +124,44 @@ public class Modulo implements Operation {
 }
 ```
 
-工厂类OperatorFactory.java
+封装策略模式的方法：
+```java
+public int calculate(int a, int b, String operator) {
+	Operation operation = null;
+    if ("add".equals(operator)) {
+		operation = new Addition();
+	} else if ("multiply".equals(operator)) {
+		operation = new Multiplication();
+	} else if ("divide".equals(operator)) {
+		operation = new Division();
+	} else if ("subtract".equals(operator)) {
+		operation = new Subtraction();
+	} else if ("modulo".equals(operator)) {
+		operation = new Modulo();
+	}
+	return operation.apply(a, b);
+}
+```
+
+使用示例：
+
+```java
+public class Test {
+    public static void main(String[] args) {
+        Calculates calculates = new Calculates();
+        // 使用 策略模式 实现的简单的计算器功能
+        System.out.println("使用 策略模式 实现的简单的计算器功能：" );
+        System.out.println("1 + 24 = " + calculates.calculateUsingStrategys(1, 24, "add"));	// 24
+        System.out.println("24 - 1 = " + calculates.calculateUsingStrategys(24, 1, "subtract"));	// 23
+        System.out.println("2 * 23 = " + calculates.calculateUsingStrategys(2, 23, "multiply"));	// 46
+        System.out.println("23 / 2 = " + calculates.calculateUsingStrategys(23, 2, "divide"));		// 11
+        System.out.println("23 % 2 = " + calculates.calculateUsingStrategys(23, 2, "modulo"));		// 1
+    }
+}
+```
+
+在封装策略模式的方法中也没有消除`if/else`语句，只是将加减乘除的方法封装在策略模式中了，因此，我们要使用工厂模式将`if/else`语句消除，以简化语句
+
 ```java
 import java.util.HashMap;
 import java.util.Map;
@@ -128,6 +171,7 @@ public class OperatorFactory {
 
     static Map<String, Operation> operationMap = new HashMap<>();
     static {
+    	// 将具体的策略对象放入一个Map中，
         operationMap.put("add", new Addition());
         operationMap.put("divide", new Division());
         operationMap.put("multiply", new Multiplication());
@@ -136,25 +180,48 @@ public class OperatorFactory {
     }
 
     public static Optional<Operation> getOperation(String operation) {
+    	// 根据传进来的字符串从Map中查找对应的策略
         return Optional.ofNullable(operationMap.get(operation));
     }
 }
 ```
-使用示例
 
+封装工厂模式的方法：
+```java
 public int calculateUsingFactory(int a, int b, String operator) {
+	// 获取到目标策略
     Operation targetOperation = OperatorFactory
       .getOperation(operator)
       .orElseThrow(() -> new IllegalArgumentException("Invalid Operator"));
+    // 调用目标策略具体的实现
     return targetOperation.apply(a, b);
 }
- 
+```
 
-3.2 枚举方式重构
+使用示例：
+
+```java
+public class Test {
+    public static void main(String[] args) {
+        Calculates calculates = new Calculates();
+        // 使用 工厂 + 策略模式 实现的简单的计算器功能
+        System.out.println("使用 工厂 + 策略模式 实现的简单的计算器功能：" );
+        System.out.println("1 + 24 = " + calculates.calculateUsingFactory(1, 24, "add"));
+        System.out.println("24 - 1 = " + calculates.calculateUsingFactory(24, 1, "subtract"));
+        System.out.println("2 * 23 = " + calculates.calculateUsingFactory(2, 23, "multiply"));
+        System.out.println("23 / 2 = " + calculates.calculateUsingFactory(23, 2, "divide"));
+        System.out.println("23 % 2 = " + calculates.calculateUsingFactory(23, 2, "modulo"));
+    }
+}
+```
+
+上面这种优化方案有一个弊端，为了能够快速拿到对应的策略实现，需要map对象来保存策略，当添加一个新策略的时候，还需要手动添加到map中，容易被忽略。
+
+## 三、使用枚举
 
 枚举实现Operator.java
 
-复制代码
+```java
 public enum Operator {
 
     ADD {
@@ -163,211 +230,61 @@ public enum Operator {
             return a + b;
         }
     },
-
+    
     MULTIPLY {
         @Override
         public int apply(int a, int b) {
             return a * b;
         }
     },
-
+    
     SUBTRACT {
         @Override
         public int apply(int a, int b) {
             return a - b;
         }
     },
-
+    
     DIVIDE {
         @Override
         public int apply(int a, int b) {
             return a / b;
         }
     },
-
+    
     MODULO {
         @Override
         public int apply(int a, int b) {
             return a % b;
         }
     };
-
+    
     public abstract int apply(int a, int b);
 }
-复制代码
-封装Operator到Calculator.java
+```
 
-    public int calculate(int a, int b, Operator operator) {
-        return operator.apply(a, b);
-    }
-使用示例
+通过枚举优化之后的代码封装如下：
 
-@Test
-public void whenCalculateUsingEnumOperator_thenReturnCorrectResult() {
-    Calculator calculator = new Calculator();
-    int result = calculator.calculate(3, 4, Operator.valueOf("ADD"));
-    assertEquals(7, result);
+```java
+public int calculateUsingEnumeration(int a, int b, String operator) {
+	Operator operatorEnum = Operator.valueOf(operator.toUpperCase());
+    return operatorEnum.apply(a, b);
 }
- 
+```
 
-3.3 命令模式
+枚举类型消除 if/else 语句的使用示例：
 
-抽象的接口
-
-public interface Command {
-    Integer execute();
-}
-实现类
-
-复制代码
-package com.baeldung.reducingIfElse;
-
-public class AddCommand implements Command {
-
-    private int a;
-    private int b;
-
-    public AddCommand(int a, int b) {
-        this.a = a;
-        this.b = b;
-    }
-
-    @Override
-    public Integer execute() {
-        return a + b;
+```java
+public class Test {
+    public static void main(String[] args) {
+        Calculates calculates = new Calculates();
+        // 使用 枚举类型 实现的简单的计算器功能
+        System.out.println("使用 枚举类型 实现的简单的计算器功能：" );
+        System.out.println("1 + 24 = " + calculates.calculateUsingEnumerations(1, 24, "add"));
+        System.out.println("24 - 1 = " + calculates.calculateUsingEnumerations(24, 1, "subtract"));
+        System.out.println("2 * 23 = " + calculates.calculateUsingEnumerations(2, 23, "multiply"));
+        System.out.println("23 / 2 = " + calculates.calculateUsingEnumerations(23, 2, "divide"));
+        System.out.println("23 % 2 = " + calculates.calculateUsingEnumerations(23, 2, "modulo"));
     }
 }
-复制代码
-其它略
-
-包装
-
-    public int calculate(Command command) {
-        return command.execute();
-    }
-测试demo
-
-@Test
-public void whenCalculateUsingCommand_thenReturnCorrectResult() {
-    Calculator calculator = new Calculator();
-    int result = calculator.calculate(new AddCommand(3, 7));
-    assertEquals(10, result);
-}
- 
-
-4.规则引擎重构
-
-抽象规则
-
-public interface Rule {
-
-    boolean evaluate(Expression expression);
-
-    Result getResult();
-}
-实现规则AddRule.java 其它略
-
-复制代码
-public class AddRule implements Rule {
-
-    private int result;
-
-    @Override
-    public boolean evaluate(Expression expression) {
-        boolean evalResult = false;
-        if (expression.getOperator() == Operator.ADD) {
-            this.result = expression.getX() + expression.getY();
-            evalResult = true;
-        }
-        return evalResult;
-    }
-
-    @Override
-    public Result getResult() {
-        return new Result(result);
-    }
-}
-复制代码
- 
-
-其中：返回结果
-
-复制代码
-public class Result {
-    int value;
-
-    public Result(int value) {
-        this.value = value;
-    }
-
-    public int getValue() {
-        return value;
-    }
-}
-复制代码
-表达式
-
-复制代码
-public class Expression {
-
-        private Integer x;
-        private Integer y;
-        private Operator operator;
-
-        public Expression(Integer x, Integer y, Operator operator) {
-                this.x = x;
-                this.y = y;
-                this.operator = operator;
-        }
-
-        public Integer getX() {
-                return x;
-        }
-
-        public Integer getY() {
-                return y;
-        }
-
-        public Operator getOperator() {
-                return operator;
-        }
-}
-复制代码
-规则引擎RuleEngine.java
-
-复制代码
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-public class RuleEngine {
-
-    private static List<Rule> rules = new ArrayList<>();
-
-    static {
-        rules.add(new AddRule());
-    }
-
-    public Result process(Expression expression) {
-
-        Rule rule = rules.stream()
-            .filter(r -> r.evaluate(expression))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Expression does not matches any Rule"));
-        return rule.getResult();
-    }
-}
-复制代码
-测试demo
-
-复制代码
-@Test
-public void whenNumbersGivenToRuleEngine_thenReturnCorrectResult() {
-    Expression expression = new Expression(5, 5, Operator.ADD);
-    RuleEngine engine = new RuleEngine();
-    Result result = engine.process(expression);
- 
-    assertNotNull(result);
-    assertEquals(10, result.getValue());
-}
+```
