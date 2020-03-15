@@ -80,7 +80,7 @@ try {
 
 通过 Java 7 的多重捕获机制，可以使用 "|" 将不同类型的异常组合起来，只需要一行 `catch` ：
 
- ```java
+```java
 try {
 	// 这里是可能发生异常的代码，一旦发生异常，就会跳至 catch 语句块中
 } catch (IOException | CloneNotSupportedException ex) {
