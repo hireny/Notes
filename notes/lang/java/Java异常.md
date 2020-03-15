@@ -3,6 +3,7 @@
 - 一、异常体系结构
 - 二、异常处理机制
 - 三、自定义异常
+- 四、try-wth-resources用法
 
 Java异常是一个描述在代码段中发生异常的对象，当发生异常情况时，一个代表该异常的对象被创建并且在导致该异常的方法中被抛出，而该方法可以选择自己处理异常或者传递该异常。
 
@@ -270,28 +271,31 @@ public static void main(String[] args) throws Exception {
 举例自定义异常：
 
 ```java
-public class MyException extends Exception {
-	private int detail;
-	MyException(int a) {
-		detail = a;
-	}
-	public String toString() {
-		return "MyException [" + detail + "]";
-	}
+public class CustomException extends Exception {
+    private int detail;
+    public CustomException(int a) {
+        detail = a;
+    }
+    @Override
+    public String toString() {
+        return "CustomException [" + detail + "]";
+    }
 }
-public class TestMyException {
-	static void compute(int a) throws MyException{
+public class CustomExceptionTest {
+
+    static void compute(int a) throws CustomException {
         System.out.println("Called compute(" + a + ")");
-        if(a > 10){
-            throw new MyException(a);
+        if (a > 10) {
+            throw new CustomException(a);
         }
         System.out.println("Normal exit!");
     }
-    public static void main(String [] args){
+
+    public static void main(String[] args) {
         try{
             compute(1);
             compute(20);
-        }catch(MyException me){
+        }catch(CustomException me){
             System.out.println("Caught " + me);
         }
     }
@@ -301,17 +305,13 @@ public class TestMyException {
 该例子完全按照上述步骤。
 
 ```shell
-D:\java>java TestMyException
 Called compute(1)
-
 Normal exit!
-
 Called compute(20)
-
-Caught MyException [20]
+Caught CustomException [20]
 ```
 
-# try-with-resources 用法
+# 四、try-with-resources 用法
 
 Java类库中包括许多必须通过调用 `close` 方法来手工关闭的资源。例如`InputStream`、`OutputStream` 和 `java.sql.Connection`。客户端会经常忽略资源的关闭，造成严重的性能后果。
 
