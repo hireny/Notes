@@ -64,7 +64,7 @@ git push -u origin master
 
 ![pushfinish](./images/1933980-f529745f6e3a1d92.png)
 
-解决问题
+# 解决问题
 
 如果输入 `$ git remote add origin git@github.com:renhai910502500/Test.git`
 提示出错信息：`fatal: remote origin alrready exists`
