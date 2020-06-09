@@ -8,7 +8,7 @@ if判断语句是很多编程语言的重要组成部分。但是，若我们最
 
 设计模式是为了更好的代码重用性，可读性，可靠性，可维护性，它有六大原则
 
-```
+```html
 	1)单一职责原则（Single Responsibility Principle，简称SRP）:该原则是针对类来说的，即一个类应该只负责一项职责.
 	2)开放--封闭原则（The Open-Closed Principle简称OCP）:是说软件实体（类、模块、函数等等）应该可以扩展，但是不可以修改。
 	3)依赖倒转原则（Dependence Inversion Principle :针对接口编程，不要对实现编程

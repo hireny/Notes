@@ -1869,10 +1869,3 @@ CloneConstructorExample e2 = new CloneConstructorExample(e1);
 e1.set(2, 222);
 System.out.println(e2.get(2)); // 2
 ```
-
-
-
-# 参考资料
-
-- Eckel B. Java 编程思想[M]. 机械工业出版社, 2002.
-- Bloch J. Effective java[M]. Addison-Wesley Professional, 2017.
