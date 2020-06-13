@@ -1,5 +1,6 @@
 # 排序算法
 
+- 前言
 - 约定
 - 冒泡排序
 - 选择排序
@@ -22,6 +23,8 @@
 	- 堆排序
 	- 性能分析
 	
+- 基数排序
+
 - 小结
 	- 排序算法的比较
 	- Java的排序算法实现
@@ -35,33 +38,68 @@
 排序算法的成本模型是比较和交换的次数。
 
 ```java
-public abstract class AbstractSort<T extends Comparable<T>> {
+public interface Sortable<T extends Comparable<T>> {
     /**
-     * 排序的抽象方法
-     * @param sourceArray
+     * 排序方法
+     * @param sources
      */
-    public abstract void sort(T[] sourceArray);
+    void sort(T[] sources);
 
-    /**
-     * 比较大小
-     * @param v
-     * @param w
-     * @return      v < w = true
-     */
-    protected boolean less(T v, T w) {
+    default boolean less(T v, T w) {
         return v.compareTo(w) < 0;
     }
 
     /**
      * 数组中元素交换
-     * @param a
+     * @param sources
      * @param i
      * @param j
      */
-    protected void exchange(T[] a, int i, int j) {
-        T t = a[i];
-        a[i] = a[j];
-        a[j] = t;
+    default void exchange(T[] sources, int i, int j) {
+        T t = sources[i];
+        sources[i] = sources[j];
+        sources[j] = t;
+    }
+    /**
+     * 打印数组
+     */
+    default void println(T[] sources) {
+        System.out.println(Arrays.toString(sources));
+    }
+}
+```
+
+```java
+public class SortElement implements Comparable<SortElement> {
+    private String name;
+
+    public SortElement(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "SortElement{" + "name='" + name + '\'' + '}';
+    }
+
+    public static SortElement[] elements() {
+        String[] strings = {"QuickSort", "ShellSort", "HeapSort", "BubbleSort",
+                "SelectionSort", "MergeSort", "Quick3waySort", "InsertionSort", "RadixSort"};
+        return Stream.of(strings)
+                .map(SortElement::new).toArray(SortElement[]::new);
+    }
+
+    @Override
+    public int compareTo(SortElement o) {
+        return this.name.compareTo(o.name);
     }
 }
 ```
@@ -74,26 +112,28 @@ public abstract class AbstractSort<T extends Comparable<T>> {
 
 <div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/0f8d178b-52d8-491b-9dfd-41e05a952578.gif" width="200px"> </div><br>
 ```java
-public class BubbleSort<T extends Comparable<T>> extends AbstractSort<T> {
+public class BubbleSort<T extends Comparable<T>> implements Sortable<T> {
+
     @Override
-    public void sort(T[] sourceArray) {
-        int n = sourceArray.length;
+    public void sort(T[] sources) {
+
+        int n = sources.length;
         boolean isSorted = false;
         for (int i = 1; i < n && !isSorted; i++) {
             isSorted = true;
-            for (int j = 0; j < sourceArray.length - i; j++) {
-                if (less(sourceArray[j + 1], sourceArray[j])) {
+            for (int j = 0; j < sources.length - i; j++) {
+                if (less(sources[j + 1], sources[j])) {
                     isSorted = false;
-                    exchange(sourceArray, j, j + 1);
+                    exchange(sources, j, j + 1);
                 }
             }
         }
     }
     public static void main(String[] args) {
-        Integer[] arr = new Integer[]{9, 32, 10, 21, 999, 53, 12, 0, -1, 74};
-        AbstractSort<Integer> sort = new BubbleSort<>();
-        sort.sort(arr);
-        System.out.println(Arrays.toString(arr));
+        SortElement[] elements = SortElement.elements();
+        Sortable<SortElement> sort = new BubbleSort<>();
+        sort.sort(elements);
+        sort.println(elements);
     }
 }
 ```
@@ -106,25 +146,30 @@ public class BubbleSort<T extends Comparable<T>> extends AbstractSort<T> {
 
 <div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/bc6be2d0-ed5e-4def-89e5-3ada9afa811a.gif" width="230px"> </div><br>
 ```java
-public class SelectionSort<T extends Comparable<T>> extends AbstractSort<T> {
+public class SelectionSort<T extends Comparable<T>> implements Sortable<T> {
+
+
     @Override
-    public void sort(T[] sourceArray) {
-        int n = sourceArray.length;
+    public void sort(T[] sources) {
+
+        int n = sources.length;
+
         for (int i = 0; i < n - 1; i++) {
             int min = i;
             for (int j = i + 1; j <n; j++) {
-                if (less(sourceArray[j], sourceArray[min])) {
+                if (less(sources[j], sources[min])) {
                     min = j;
                 }
             }
-            exchange(sourceArray, min, i);
+            exchange(sources, min, i);
         }
     }
+
     public static void main(String[] args) {
-        Integer[] arr = new Integer[]{12, 32, 10, 21, 999, 53, 12, 0, -1, 74};
-        AbstractSort<Integer> sort = new SelectionSort<>();
-        sort.sort(arr);
-        System.out.println(Arrays.toString(arr));
+        SortElement[] elements = SortElement.elements();
+        Sortable<SortElement> sort = new SelectionSort<>();
+        sort.sort(elements);
+        sort.println(elements);
     }
 }
 ```
@@ -143,22 +188,23 @@ public class SelectionSort<T extends Comparable<T>> extends AbstractSort<T> {
 
 <div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/35253fa4-f60a-4e3b-aaec-8fc835aabdac.gif" width="200px"> </div><br>
 ```java
-public class InsertionSort<T extends Comparable<T>> extends AbstractSort<T> {
-    @Override
-    public void sort(T[] sourceArray) {
+public class InsertionSort<T extends Comparable<T>> implements Sortable<T> {
 
-        int n = sourceArray.length;
+    @Override
+    public void sort(T[] sources) {
+        int n = sources.length;
         for (int i = 1; i < n; i ++) {
-            for (int j = i; j > 0 && less(sourceArray[j], sourceArray[j-1]); j--) {
-                exchange(sourceArray, j-1, j);
+            for (int j = i; j > 0 && less(sources[j], sources[j-1]); j--) {
+                exchange(sources, j-1, j);
             }
         }
     }
+
     public static void main(String[] args) {
-        Integer[] arr = new Integer[]{9, 32, 10, 21, 999, 53, 12, 0, -1, 74};
-        AbstractSort<Integer> sort = new InsertionSort<>();
-        sort.sort(arr);
-        System.out.println(Arrays.toString(arr));
+        SortElement[] elements = SortElement.elements();
+        Sortable<SortElement> sort = new InsertionSort<>();
+        sort.sort(elements);
+        sort.println(elements);
     }
 }
 ```
@@ -171,11 +217,12 @@ public class InsertionSort<T extends Comparable<T>> extends AbstractSort<T> {
 
 <div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/7818c574-97a8-48db-8e62-8bfb030b02ba.png" width="450px"> </div><br>
 ```java
-public class ShellSort<T extends Comparable<T>> extends AbstractSort<T> {
+public class ShellSort<T extends Comparable<T>> implements Sortable<T> {
 
 	@Override
-	public void sort(T[] sourceArray) {
-		int n = sourceArray.length;
+	public void sort(T[] sources) {
+		int n = sources.length;
+		int a = 0;
 		// 区间
 		int h = 1;
 		while (h < n / 3) {
@@ -186,20 +233,21 @@ public class ShellSort<T extends Comparable<T>> extends AbstractSort<T> {
 			// 将数组变成h有序
 			for (int i=h; i < n; i++) {
 				//将a[i]插入到a[i-h],a[i-2*h],a[i-3*h]...之中
-				for (int j=i; j>=h && less(sourceArray[j], sourceArray[j-h]); j -=h) {
+				for (int j=i; j>=h && less(sources[j], sources[j-h]); j -=h) {
 					a++;
-					exchange(sourceArray, j, j - h);
+					exchange(sources, j, j - h);
 				}
 			}
 			h = h/3;
 		}
+		System.out.println("排序次数="+a);
 	}
-	public static void main(String[] args) {
 
-		Integer[] arr = new Integer[]{9, 32, 10, 21, 999, 53, 12, 0, -1, 74};
-		AbstractSort<Integer> sort = new ShellSort<>();
-		sort.sort(arr);
-		System.out.println(Arrays.toString(arr));
+	public static void main(String[] args) {
+		SortElement[] elements = SortElement.elements();
+		Sortable<SortElement> sort = new ShellSort<>();
+		sort.sort(elements);
+		sort.println(elements);
 	}
 }
 ```
@@ -216,7 +264,7 @@ public class ShellSort<T extends Comparable<T>> extends AbstractSort<T> {
 归并方法将数组中两个已经排序的部分归并成一个。
 
 ```java
-public abstract class MergeSort<T extends Comparable<T>> extends AbstractSort<T> {
+public abstract class MergeSort<T extends Comparable<T>> implements Sortable<T> {
 
     // 归并排序所需的辅助数组
     protected T[] aux;
@@ -264,13 +312,13 @@ public abstract class MergeSort<T extends Comparable<T>> extends AbstractSort<T>
 因为每次都将问题对半分成两个子问题，这种对半分的算法复杂度一般为 O(NlogN)。
 
 ```java
-public class MergeUDSort<T extends Comparable<T>> extends MergeSort<T> {
+public class MergeTDSort<T extends Comparable<T>> extends MergeSort<T> {
 
     @Override
-    public void sort(T[] sourceArray) {
+    public void sort(T[] sources) {
         //一次性分配空间
-        aux = (T[]) Array.newInstance(sourceArray.getClass().getComponentType(), sourceArray.length);
-        sort(sourceArray, 0, sourceArray.length-1);
+        aux = (T[]) Array.newInstance(sources.getClass().getComponentType(), sources.length);
+        sort(sources, 0, sources.length-1);
     }
     private void sort(T[] a, int lo, int hi) {
         // 将数组a[lo...hi]排序
@@ -282,13 +330,14 @@ public class MergeUDSort<T extends Comparable<T>> extends MergeSort<T> {
         sort(a, mid+1, hi); // 将右半边排序
         merge(a, lo, mid, hi); //归并结果
     }
-    public static void main(String[] args) {
 
+
+    public static void main(String[] args) {
         //自顶向下的归并排序
-        Integer[] arr = new Integer[]{9, 32, 10, 21, 999, 53, 12, 0, -1, 74};
-        MergeSort<Integer> sort = new MergeUDSort<>();
-        sort.sort(arr);
-        System.out.println(Arrays.toString(arr));
+        SortElement[] elements = SortElement.elements();
+        Sortable<SortElement> sort = new MergeTDSort<>();
+        sort.sort(elements);
+        sort.println(elements);
     }
 }
 ```
@@ -299,7 +348,7 @@ public class MergeUDSort<T extends Comparable<T>> extends MergeSort<T> {
 自底向上的归并排序算法的思想就是数组汇总先一个一个归并成两两有序的序列，两两有序的序列归并成四个四个有序的序列，一次类推，直到归并的长度大于整个数组的长度，此时数组有序。需要注意的是数组按照归并长度划分，最后一个子数组可能不满足长度要求，这个情况特殊处理。
 
 ```java
-public class MergeDUSort<T extends Comparable<T>> extends MergeSort<T> {
+public class MergeBUSort<T extends Comparable<T>> extends MergeSort<T> {
 
     @Override
     public void sort(T[] sourceArray) {
@@ -315,13 +364,13 @@ public class MergeDUSort<T extends Comparable<T>> extends MergeSort<T> {
         }
     }
     public static void main(String[] args) {
-
         //自底向上的归并排序
-        Integer[] arr = new Integer[]{9, 32, 10, 21, 999, 53, 12, 0, -1, 74};
-        MergeSort<Integer> sort = new MergeDUSort<>();
-        sort.sort(arr);
-        System.out.println(Arrays.toString(arr));
+        SortElement[] elements = SortElement.elements();
+        Sortable<SortElement> sort = new MergeBUSort<>();
+        sort.sort(elements);
+        sort.println(elements);
     }
+}
 ```
 
 # 快速排序
@@ -334,11 +383,11 @@ public class MergeDUSort<T extends Comparable<T>> extends MergeSort<T> {
 
 <div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/6234eb3d-ccf2-4987-a724-235aef6957b1.png" width="280px"> </div><br>
 ```java
-public class QuickSort<T extends Comparable<T>> extends AbstractSort<T> {
+public class QuickSort<T extends Comparable<T>> implements Sortable<T> {
 
 	@Override
-	public void sort(T[] sourceArray) {
-		sort(sourceArray, 0, sourceArray.length - 1);
+	public void sort(T[] sources) {
+		sort(sources, 0, sources.length - 1);
 	}
 
 	private void sort(T[] a, int lo, int hi) {
@@ -350,10 +399,10 @@ public class QuickSort<T extends Comparable<T>> extends AbstractSort<T> {
 		sort(a, j+1, hi); // 将有半部分a[j+1...hi]排序
 	}
 	public static void main(String[] args) {
-		Integer[] arr = new Integer[]{12, 32, 10, 21, 999, 53, 12, 0, -1, 74};
-		AbstractSort<Integer> sort = new QuickSort<>();
-		sort.sort(arr);
-		System.out.println(Arrays.toString(arr));
+		SortElement[] elements = SortElement.elements();
+		Sortable<SortElement> sort = new QuickSort<>();
+		sort.sort(elements);
+		sort.println(elements);
 	}
 }
 ```
@@ -423,11 +472,11 @@ private int partition(T[] a, int lo, int hi) {
 三向切分快速排序对于有大量重复元素的随机数组可以在线性时间内完成排序。
 
 ```java
-public class Quick3waySort<T extends Comparable<T>> extends AbstractSort<T> {
+public class Quick3waySort<T extends Comparable<T>> implements Sortable<T> {
 
     @Override
-    public void sort(T[] sourceArray) {
-        sort(sourceArray, 0, sourceArray.length - 1);
+    public void sort(T[] sources) {
+        sort(sources, 0, sources.length - 1);
     }
     private void sort(T[] a, int lo, int hi) {
         if(hi <= lo) {
@@ -450,10 +499,10 @@ public class Quick3waySort<T extends Comparable<T>> extends AbstractSort<T> {
         sort(a, gt+1, hi); // 将有半部分a[gt+1...hi]排序
     }
     public static void main(String[] args) {
-        Integer[] arr = new Integer[]{12, 32, 10, 21, 999, 53, 12, 0, -1, 74};
-        AbstractSort<Integer> sort = new Quick3waySort<>();
-        sort.sort(arr);
-        System.out.println(Arrays.toString(arr));
+        SortElement[] elements = SortElement.elements();
+        Sortable<SortElement> sort = new Quick3waySort<>();
+        sort.sort(elements);
+        sort.println(elements);
     }
 }
 ```

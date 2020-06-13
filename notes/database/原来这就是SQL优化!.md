@@ -88,7 +88,15 @@ select name from user where create_time < FROM_UNIXTIME(CURDATE());
 
 在索引字段上使用`not`，`<>`，`!=`。不等于操作符是永远不会用到索引的，因此对它的处理只会产生全表扫描。 优化方法： `key<>0` 改为 `key>0 OR key<0`。
 
-# SQL优化
+# 插入语句的优化
+
+# 查询语句的优化
+
+### ORDER BY 排序优化
+
+### LIMIT 分页优化
+
+### GROUP BY 分组优化
 
 负向查询不能使用索引
 
