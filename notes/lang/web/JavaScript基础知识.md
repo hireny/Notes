@@ -266,9 +266,22 @@ JavaScript共有六种数据类型。（ES6新增了Symbol数据类型）
 - 数组（array）
 - 函数（function）
 
+JavaScript拥有动态类型。这意味着相同的变量可用作不同的类型
+
 ## 数值
 
 ## 字符串
+
+字符串是存储字符的变量。
+
+字符串可以是引号中的任意文本。您可以使用单引号或双引号：
+
+```javascript
+var carname = "Bill Gates";
+var carname = 'Bill Gates;
+```
+
+你可以在字符串中使用引号，只要不匹配包围字符串的引号即可
 
 ## 对象
 
