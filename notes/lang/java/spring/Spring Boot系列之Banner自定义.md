@@ -2,14 +2,14 @@
 
 Spring Boot 在启动后会在控制台显示默认的Banner横幅：
 
-
+![](./images/spring-boot-banner-20200610114804.png)
 
 但有时我们需要将默认横幅更换掉，换上自己的或者公司的LOGO，因此我们研究一下 Spring Boot 的 Banner 究竟是不是可配置的。
 
 源码分析
 现在我们分析一下Spring Boot在启动时必须经过的方法 `run()`：
 
-
+![](./images/spring-boot-banner-20200611124349.png)
 
 进入 SpringApplication 类，查看一下 run() 方法：
 
@@ -54,7 +54,7 @@ private Banner printBanner(ConfigurableEnvironment environment) {
 }
 ```
 
-查看 `printBanner()` 方法，可知 banner 打印有三种情况：查看一下 Mode 源码：
+查看 `printBanner()` 方法，可知 `banner` 打印有三种情况：查看一下 `Mode` 源码：
 
 ```java
 package org.springframework.boot;
@@ -72,7 +72,7 @@ public interface Banner {
 }
 ```
 
-从上述源码可知， banner 的三种情况就是在控制台打印，在日志中打印与停止打印。
+从上述源码可知， `banner` 的三种情况就是在控制台打印，在日志中打印与停止打印。
 
 ```java
 private Banner getBanner(Environment environment) {
@@ -195,70 +195,77 @@ private char getAsciiPixel(Color color, boolean dark, ImageBanner.PixelMode pixe
 
 这样，一个 Banner 的打印流程就完成了。下面我们来配置自己的 Banner图 。
 
-Banner配置
+# Banner配置
 首先我们设置一个 banner.png 文件并将它存储在 src/main/resources 中：
 
-
+![](./images/spring-oot-banner-20200611214550.png)
 
 运行该Spring Boot后，在控制台输出：
 
-
+![](./images/spring-boot-banner-20200611215135.png)
 
 在设置一个 banner.jpg 文件：
 
-
+![](./images/spring-boot-banner-20200611215415.png)
 
 运行后可以看到：
 
-
+![](./images/spring-boot-banner-20200611232515.png)
 
 在设置一个 banner.gif 文件：
 
-
+![](./images/spring-boot-banner-20200611235032.png)
 
 运行后可以看到：
 
-
+![](./images/spring-boot-banner-20200611235243.png)
 
 在设置一个 banner.txt文件：
 
-
+![](./images/spring-boot-banner-20200611235423.png)
 
 再次启动项目，可以看到如下内容：
 
-
+![](./images/spring-boot-banner-20200611235751.png)
 
 从如上流程与源码中可以看出 Banner 的执行顺序：
 
-先在 classpath 下找 banner.gif、banner.jpg 与 banner.png，根据顺序查找，先找到谁就读取哪个，然后打印，如果都没有，就不打印；
-当在 classpath 下存在 banner.txt 时，也会读取该文件并打印，并不与上面冲突；
-当都没有的时候，会先判断是否设置了读取失败的 fallbackBanner，如果没有才会使用默认的 SpringBootBanner。
-配置文件
+- 先在 classpath 下找 banner.gif、banner.jpg 与 banner.png，根据顺序查找，先找到谁就读取哪个，然后打印，如果都没有，就不打印；
+
+- 当在 classpath 下存在 banner.txt 时，也会读取该文件并打印，并不与上面冲突；
+
+- 当都没有的时候，会先判断是否设置了读取失败的 fallbackBanner，如果没有才会使用默认的 SpringBootBanner。
+
+
+## 配置文件
+
 当然，不止是换个 Banner 那么简单，我们还可以对 Banner 在配置文件中进行配置。
 
 首先我们可以使用 ${AnsiColor.NAME} 更改 banner.txt 的字体颜色：
 
-
+![](./images/spring-boot-banner-20200612001649.png)
 
 输出的结果：
 
-
+![](./images/spring-boot-banner-20200612001756.png)
 
 在 banner.txt 中还可以添加下面的表达式：
 
 |表达式         |说明     |
+|:---:|:---:|
 |${application.title}    |MANIFEST>MF中定义的程序名称 |
 |${application.version}    |MANIFEST.MF文件中的版本号|
 |${application.formatted-version} |格式化后的${application.version}版本信息|
 |${spring-boot.version}    |spring boot的版本号  |
 |${spring-boot.formatted-version} |格式化后的${spring-boot.version}版本信息  |
+
 下面是给一个使用表达式的例子：
 
-
+![](./images/spring-boot-banner-20200612123525.png)
 
 效果如下：
 
-
+![](./images/spring-boot-banner-20200612123317.png)
 
 我们还可以在 appliation.properties 文件中配置一些 banner 的属性：
 
@@ -284,7 +291,8 @@ spring.banner.image.margin=2
 spring.banner.image.invert=false
 ```
 
-Banner自定义
+# Banner自定义
+
 如果Spring Boot自带的Banner类不适合，我们可以定制一个实现了 Banner 接口的 Banner 类，来满足我们的需求。
 
 首先我们需要创建一个实现 Banner 接口的类：
@@ -306,8 +314,11 @@ public class SampleBanner implements Banner {
         out.println();
     }
 }
-在SpringBootApplication的启动类中进行注册：
+```
 
+在`SpringBootApplication`的启动类中进行注册：
+
+```java
 @SpringBootApplication
 public class SpringBootBannerApplication {
     public static void main(String[] args) {
