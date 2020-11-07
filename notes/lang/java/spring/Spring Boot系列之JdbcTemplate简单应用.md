@@ -6,7 +6,7 @@
 
 # 数据库
 
-首先，我们可以执行`student`的语句的`SQL`来创建此表：
+首先，我们可以执行`student.sql`创建此表：
 
 ```sql
 CREATE TABLE `student` (
@@ -45,11 +45,6 @@ CREATE TABLE `student` (
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
         <version>3.4.5</version>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-test</artifactId>
-        <scope>test</scope>
     </dependency>
 </dependencies>
 ```
