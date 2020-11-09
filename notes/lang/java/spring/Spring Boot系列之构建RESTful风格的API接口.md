@@ -331,4 +331,4 @@ private List<Student> queryStudents(Student student) {
 
 本文简单的介绍了使用`spring-boot-starter-web`实现 RESTful 风格的 API 接口，通过规范的 API 设计，来统一前后端交换数据格式和改变数据状态。
 
-> 本文使用的 `Spring Boot` 版本为 `2.2.1.RELEASE` ，`mysql-connector-java`版本为`8.0.18`。
+> 本文使用的 `Spring Boot` 版本为 `2.2.1.RELEASE`。
