@@ -28,11 +28,11 @@ Spring Boot 的数据源是自动配置的。在 Spring Boot 2.2.1 版本中，�
 # 驱动
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 # 数据库地址
-spring.datasource.url=jdbc:mysql://127.0.0.1:3306/spring-boot-jdbc?charset=utf8mb4&useSSL=false
+spring.datasource.url=jdbc:mysql://127.0.0.1:3306/xxxx?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false
 # 数据库用户名
-spring.datasource.username=xxx
+spring.datasource.username=xxxx
 # 数据库密码
-spring.datasource.password=xxx
+spring.datasource.password=xxxx
 ```
 
 还有其它的关于数据源的配置：
