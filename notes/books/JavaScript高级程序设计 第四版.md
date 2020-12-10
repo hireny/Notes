@@ -1,19 +1,10 @@
 # JavaScript高级程序设计 第四版 PDF
 
-![在这里插入图片描述](./images/JavaScript高级程序设计（第4版）.jpg)
+![在这里插入图片描述](https://github.com/hireny/Notes/blob/master/notes/books/images/JavaScript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC4%E7%89%88%EF%BC%89.jpg)
 
-JavaScript高级程序设计 第四版，主要添加了 ES6 相关的知识。
+JavaScript高级程序设计 第四版，在第三版的基础上添加了`ES6`相关的内容。如`let`、`const`关键字，`Fetch API`、工作者线程、模块、`Promise` 等。适合具有一定编程经验的 Web 应用开发人员阅读。
 
-主要内容包括：
-
-- JavaScript 的历史
-- 数据类型
-- DOM 与 BOM
-- 事件
-- 客户端数据存储
-- JavaScript 设计模式与实践策略
-- 关于 ES6 的内容
-
+![](https://github.com/hireny/Notes/blob/master/notes/books/images/JavaScript高级程序设计.png)
 
 按以下步骤获取：
 
@@ -21,5 +12,5 @@ JavaScript高级程序设计 第四版，主要添加了 ES6 相关的知识。
 2. 在公总号后台回复关键字 「7913」
 
 
-![](C:\Users\hireny\Pictures\公众号\扫码.png)
+![在这里插入图片描述](https://github.com/hireny/Notes/blob/master/assets/AccountsCode.png)
 
