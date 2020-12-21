@@ -420,7 +420,7 @@ var keys = Object.getOwnPropertyNames(Student.prototype);
 console.log(keys);	// [ 'constructor', 'name', 'age', 'sid', 'sayHi' ]
 ```
 
-`Object.keys()` 和 `Object.getOwnPropertyNames()` 都可替代 `for-in` 循环。
+`Object.keys()` 和 `Object.getOwnPropertyNames()` 都可以替代 `for-in` 循环。
 
 ### 更简单的原型语法
 
@@ -477,7 +477,7 @@ Object.defineProperty(Student.prototype, "constructor", {
 
 ### 原型的动态性
 
-在原型中查找值的过程是一次搜索，即便我们先创建实例，在修改原型，都会反映到实例上。
+在原型中查找值的过程是一次搜索，即便我们先创建实例，再修改原型，都会反映到实例上。
 
 ```javascript
 var s1 = new Student();
@@ -750,7 +750,7 @@ console.log(instance.getSuperValue());     // true
 
 上面的代码主要是通过`SuperType`的实例赋值给`SubType.prototype`来实现继承。而所有的类型都是继承自`Object`，而该继承也是通过原型链实现的。
 
-我们可以通过 `instanceof` 操作符和`isPrototypeOf()`方法来确定原型和实例之间的关系。
+我们可以通过 `instanceof` 操作符合`isPrototypeOf()`方法来确定原型和实例之间的关系。
 
 ```javascript
 console.log(Object.prototype.isPrototypeOf(instance));          //true
@@ -980,7 +980,7 @@ class Student extends Person{
 }
 ```
 
-上面代码中，`constructor`方法出现了`super`关键字，它在这里表示父类的构造函数，用来新键父类的`this`对象。
+上面代码中，`constructor`方法出现了`super`关键字，它在这里表示父类的构造函数，用来新建父类的`this`对象。
 
 
 # 总结

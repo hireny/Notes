@@ -10,7 +10,7 @@ Java 8中引入了 `Optional` 类来解决 `NullPointerException` 与繁琐的 `
 
 ![Optional对象](./images/Optional对象.png)
 
-但是 `null` 引用和 `Optional.empty()` 有什么本质区别？从语义上，它们可以当成一回事儿，但实际上差别非常大：如果尝试解引用一个 `null`，一定会触发 `NullPointerException`，不过使用 `Optional.empty()` 是一个有效对象。
+但是 `null` 引用和 `Optional.empty()` 有什么本质区别？从语义上，它们可以当成一回事儿，但实际上差别非常大：如果尝试解引用一个 `null`，一定会触发 `NullPointerException`，不过使用 `Optional.empty()` 是一个有效的对象。
 
 下面我们来看一下 `Optional` 提供的功能。
 

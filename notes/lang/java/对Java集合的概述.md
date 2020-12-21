@@ -961,7 +961,7 @@ private static class Entry<K,V> extends WeakReference<Object> implements Map.Ent
 
 `Entry` 继承了 `WeakReference` ，利用 `WeakReference` 的机制来实现不阻止GC回收`Key`，即每次GC，都会将这个对象清除。
 
-而`WeakHashMap` 中维护的 `ReferenceQueue` 的作用就是用来存储哪些 `key` 已被清除。
+而`WeakHashMap` 中维护的 `ReferenceQueue` 的作用就是用来存储那些 `key` 已被清除。
 
 ```java
 private final ReferenceQueue<Object> queue = new ReferenceQueue<>();
