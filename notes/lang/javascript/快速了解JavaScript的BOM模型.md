@@ -24,11 +24,11 @@ window.sayAge();			// 29
 
 `window`除了`location`、`navigator`、`screen`、`history`和`document`外，还有一些属性。
 
-- `window.console`：返回`Console`对象的引用，可以像浏览器控制台输出日志信息。仅用于调试，不应该给用户呈现。（只读）
+- `window.console`：返回`Console`对象的引用，可以向浏览器控制台输出日志信息。仅用于调试，不应该给用户呈现。（只读）
 - `window.frames`：数组对象，列出当前窗口的所有直接子窗口。（只读）
 - `window.frameElement`：当前窗口嵌入另一个窗口（嵌入`<object>、<iframe>`），如果当前窗口是顶层，返回`null`。（只读）
 - `window.innerHeight`：窗口的视图可见高度（单位：像素），也包括滚动条高度。（只读）
-- `window.innerWidth`：窗口的试图可见宽度（单位：像素），也包括滚动条的宽度。（只读）
+- `window.innerWidth`：窗口的视图可见宽度（单位：像素），也包括滚动条的宽度。（只读）
 - `window.length`：当前窗口中包含框架数量。框架为`<frame>`与`<iframe>`。（只读）
 - `window.locationbar`：检查`visibility`属性的地址栏对象，用来表示是否可见。（只读）
 - `window.localStorage`：访问`Document`源的对象`Storage`；将数据存储在浏览器会话中。类似`sessionStorage`，但数据可长期保留；而页面会话结束时，`sessionStorage`数据会清除。（只读）
@@ -99,7 +99,7 @@ if (result == "2011-10-23") {
 `window.open(url, target, features, replace)`方法用于创建新的窗口。
 
 - `url`参数为新窗口加载的`URL`。
-- `target`参数为新窗口的名字。每个窗口都有一个`window.name`，这里可以指定窗口用于弹窗，如果不存在，新键窗口。这个名字可用做`<a>`或`<form>`的属性`target`的值。字符串中不能含有空白字符。注意：`target`不是新窗口标题。
+- `target`参数为新窗口的名字。每个窗口都有一个`window.name`，这里可以指定窗口用于弹窗，如果不存在，新建窗口。这个名字可用作`<a>`或`<form>`的属性`target`的值。字符串中不能含有空白字符。注意：`target`不是新窗口标题。
 - `features`参数为字符串值，内容用逗号分隔，参数不能有空格，例如`width=200,height=100`。
 
 ```javascript
@@ -124,7 +124,7 @@ window.open('/', 'test', params);
 
 同源策略，窗口只可访问相同协议下的内容（相同协议:`//domain:port`）。
 
-`window.close()`方法用于关闭当前窗口，一般只用来关闭`window.open()`方法新键的窗口。使用`window.closed`属性来判断窗口是否被关闭。
+`window.close()`方法用于关闭当前窗口，一般只用来关闭`window.open()`方法新建的窗口。使用`window.closed`属性来判断窗口是否被关闭。
 
 在当前窗口中关闭窗口：
 
@@ -421,7 +421,7 @@ function logData() {
 
 # history对象
 
-`history`对象保存着浏览器的历史记录。处于安全考虑，开发人员无法得知用户浏览器的URL。但能通过历史列表实现后退和前进。下面是`history`对象主要的属性。
+`history`对象保存着浏览器的历史记录。出于安全考虑，开发人员无法得知用户浏览器的URL。但能通过历史列表实现后退和前进。下面是`history`对象主要的属性。
 
 - `length`：返回当前窗口历史列表中的`URL`数量。
 - `scrollRestoration`：允许Web应用程序在历史列表上显示地设置默认滚动恢复行为。

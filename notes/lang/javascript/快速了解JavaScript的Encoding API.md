@@ -1,6 +1,4 @@
-Encoding API 主要用于实现字符串与定型数组之间的转换。规范新增了 4 个用于执行转换的全局类：`TextEncoder`、`TextEncoderStream`、`TextDecoder`和`TextDecoderStream`。
-
-注意：相比于批量（bulk）的编解码，对流（stream）编解码的支持很有限。
+`Encoding API` 主要是提供一种机制来处理各种字符编码中的文本。该 `API` 主要提供四个接口：`TextEncoder`、`TextEncoderStream`、`TextDecoder`和`TextDecoderStream`。
 
 # 文本编码
 
