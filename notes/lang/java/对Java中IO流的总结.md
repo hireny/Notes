@@ -1,12 +1,13 @@
-Java I/O 是Java提供的一套关于输入和输出的编程接口。里面包含操作输入和输出所需要的类。
+I/O 就是计算机的输入与输出操作，描述计算机中数据的流动过程。每一种编程语言都需要实现自己的 I/O API，用来读取磁盘、读写网络、访问文件等其他关于 I/O 的相关操作。
 
-流的概念：TCP中的流指的是流入到进程或从进程流出的字节序列。
+![](./images/6-1 Java IO.png)
 
-Java中IO流分为：
+`java.io` 是 Java 提供的一套关于 I/O 的编程接口，里面包含了操作输入和输出所需要的类。在 `java.io` 中，I/O流分为两类：
 
-- 按照流，可以分为输入流和输出流；
-- 按照操作单元划分，可以分为字节流和字符流；
-- 按照流的角色划分，可以分为节点流和处理流。
+- 字节流。面向字节的流，操作数据的字节。
+- 字符流。面向字符的流，操作字符。
+
+JDK 1.0 开始就提供了字节流来操作 I/O 流，JDK 1.1 才引入字符流，字符流通常是处理 `Unicode` 字符集的类层次结构。这些类的 I/O 操作都是基于两字节的 Char 值（即，`Unicode`码元），而不是基于 byte 值。
 
 字节流和字符流操作的本质区别只有一个：字节流是原生的操作，字符流是经过处理后的操作。
 
@@ -14,224 +15,610 @@ Java中IO流分为：
 
 # 输入/输出流
 
-## 输入流
+在 Java I/O中，能读取一个字节序列的对象称作输入流，能写入一个字节序列的对象称作输出流。而这些字节序列可能来自于文件、网络连接，或者是内存块。而构成 Java I/O 层次结构的基础是抽象类 `InputStream` 和 `OutputStream`。
 
-`InputStream` 表示那些从不同数据源产生输入的类，如下所示，这些数据包括：
+## InputStream
 
-1. 字节数组
-2. `String`对象
-3. 文件
-4. “管道”，从工作方式与实际生活中的管道类似：从一端输入，从另一端输出；
-5. 一个由其它种类的流组成的序列，然后我们可以把它们汇聚成一个流；
-6. 其它数据源，如 Internet 连接。
-
-每种数据源都有相应的 `InputStream` 子类。另外，`FileInputStream` 也属于一种 `InputStream`，它的作用是为 “装饰器” 类提供基类。其中，“装饰器”类可以把属性或游泳的接口与输入流连接在一起。
-
-继承 `InputStream` 的子类都有：
-
-|类|功能|构造器参数|使用|
-|:---:|:---:|:---:|:---:|
-|ByteArrayInputStream||||
-|FileInputStream|用于从文件中读取信息|||
-|FilterInputStream|抽象类，作为“装饰器”的接口。其中，“装饰器”为其它的`InputStream`类提供有用的功能|||
-|ObjectInputStream||||
-|SequenceInputStream|将两个或多个`InputStream`对象转换成一个`InputStream`|||
-|StringBufferInputStream|将`String`转换成`InputStream`|||
-|PipedInputStream|产生用于写入相关`PipedOutStream`的数据。实现“管道化”概念|||
-
-在 Java I/O APi 中，可以从其中读入一个字节序列的对象称作输入流，可以像其中写入一个字节序列的对象称作输出流。字节序列的来源和目的通常是文件、网络连接或内存块。输入输出流的基类主要是抽象类 `InputStream` 和 `OutputStream`。
-
-因为面向字节的流不便于处理以 Unicode 形式存储的信息，所以从抽象类 Reader 和 Writer 中继承出来了一个专门用于处理 Unicode 字符的单独的类层次结构。这些类拥有的读入和写出操作都是基于两字节的 Char 值的（即，Unicode 码元），而不是基于 byte 值的。
-
-`InputStream`类有一个抽象方法 `abstract int read()`，这个方法将读入一个字节，并返回读入的字节，或者在遇到输入源结尾时返回 `-1`。在设计具体的输入流类时，必须覆盖这个方法以提供适用的功能。例如，在 `FileInputStream` 中，这个方法将从某个文件中读入一个字节，而 `System.in` 却是从 “标准输入” 中读入信息，即控制台或重定向的文件。
-
-`InputStream`类还有若干个非抽象的方法，它们可以读入一个字节数组，或者跳过大量字节。这些方法都要调用抽象的 `read` 方法，因此，各个子类都只需覆盖这一个方法。
-
-与此类似，`OutputStream`类定义了一个抽象方法 `abstract void write(int b)`，可以像某个输出位置写出一个字节。
-
-`read` 和 `write` 方法在执行时都将阻塞，直至字节确实被读入或写出。这意味着如果不能被立即访问，那么当前的线程将被阻塞。这使得在这两个方法等待指定的流变为可用的这段时间里，其它的线程就有机会去执行有用的工作。
-
-`available` 方法使我们可以去检查当前可读入的字节数量，这意味着像下面的代码片段就不能被阻塞：
+`InputStream` 是一个抽象类，是输入字节流中的基类。
 
 ```java
-int bytesAvailable = in.available();
-if (bytesAvailable > 0) {
-    byte[] data = new byte[bytesAvailable];
-    in.read(data);
+public abstract class InputStream implements Closeable {
+    ...
 }
 ```
 
-当你完成对输入/输出流的读写时，应该通过调用 `close` 方法来关闭它，这个调用会释放掉十分有限的操作系统资源。如果一个应用程序打开了过多的输入/输出流而没有关闭，那么系统资源将被耗尽。关闭一个输出流的同时还会冲刷用于该输出流的缓冲区：所有被临时置于缓冲区中，以便用更大的包的形式传递的字节在关闭输出流时都将被送出。特别是，如果不关闭文件，那么写出字节的最后一个包可能将永远也得不到传递。当然，我们还可以用 `flush` 方法来人为地冲刷这些输出。
+`InputStream` 抽象类实现了 `Closeable` 接口，该接口提供了一个方法：
 
-即使某个输入/输出流类提供了使用原生的 `read` 和 `write` 功能的某些具体方法，应用系统的程序员还是很少使用它们，因为大家感兴趣的数据可能包含数字、字符串和对象，而不是原生字节。
+```java
+public void close() throws IOException;
+```
 
-我们可以使用众多的从基本的 `InputStream` 和 `OutputStream` 类导出的某个输入/输出类，而不只是直接使用字节。
+`Closeable` 接口扩展了 `AutoCloseable` 接口， 且 `AutoCloseable` 接口中也提供了一个 `close()` 方法：
 
-## 输出流
+```java
+void close() throws Exception;
+```
 
-如下所示，该类别的类决定了输出要去往的目标：字节数组（但不是`String`，当然，你也可以用字节数组自己创建）、文件或管道。
+该接口与 `Closeable` 接口中的方法相同，但抛出的异常不同，`Closeable` 接口的 `close()` 方法抛出 `IOException` 异常，而 `AutoCloseable` 接口的 `close()` 方法可以抛出任何异常。
 
-另外，`FilterOutputStream` 为 “装饰器” 类提供了一个基类；“装饰器” 类把属性或者游泳的接口与输出流连接了起来，这些稍后讨论。
+<small>注意：凡是实现了 `AutoCloseable` 接口的类都可以使用 `try-with-resource`语句。因此，`Closeable` 接口也可以使用 `try-with-resource`语句。 </small>
 
-继承 `OutputStream` 类型的有：
+`InputStream` 抽象类提供了一个抽象方法：
 
-|类|功能|构造器参数|使用|
-|:---:|:---:|:---:|:---:|
-|ByteArrayOutputStream|在内存中创建缓存区。所有送往“流”的数据都要放置在此缓存区|||
-|FileOutputStream|用于将信息写入文件|||
-|FilterOutputStream|抽象类，作为“装饰器”的接口。其中，“装饰器”为其它的`OutputStream`类提供有用的功能|||
-|ObjectOutputStream||||
-|SequenceOutputStream|将两个或多个`InputStream`对象转换成一个`InputStream`|||
-|StringBufferOutputStream|将`String`转换成`InputStream`|||
-|PipedOutputStream|任何写入其中的信息都会自动作为相关`PipedInputStream`输出。实现“管道化”概念|||
+```java
+public abstract int read() throws IOException;
+```
 
-## 添加属性和有用的接口
+这个方法作用是读取一个字节并返回读入的字节，当读到源结尾时返回 `-1`。在实现具体输入流类时，必须覆盖这个方法以提供适用的功能。
 
-Java I/O 类库需要多种不同功能的组合，这正是使用装饰器模式的原因所在。而之所以存在 `Filter I/O`类，是因为让抽象类 `Filter I/O`作为所有装饰器类的基类。装饰器必须具有和它所装饰对象相同的接口，但它也可以扩展接口，不过这种情况只发生在个别 `Filter I/O` 类中。
+`InputStream` 抽象类中有两个具体的 `read()` 方法用于读取字节流，这两个方法都调用抽象的 `read()` 方法，因此，各个实现了 `InputStream` 的子类只需覆盖 `read()` 抽象方法即可。下面列出 `InputStream` 抽象类实现的方法，这些方法都会抛出 `IOException` 异常。
 
-但是，装饰器模式也有一个缺点：在编写程序的时候，它给我们带来了相当多的灵活性（因为我们可以很容易地对属性进行混搭），但它同时也增加了代码的复杂性。Java I/O 类库操作不便的原因在于：我们必须创建许多类（“核心” I/O 类型加上所有的装饰器）才能得到我们所希望的单个 I/O 对象。
+- `int read(byte b[])`：从输入流中读取一些字节数，并将它们存储到`byte` 数组中。`byte`数组相当于缓冲区。
+- `int read(byte b[], int off, int len)`：从`off` 起始，读取`len`个字节的数据放入 `byte` 数组中。
+- `long skip(long n)`：跳过并丢弃来自此输入流的`n`字节。
+- `int available()`：返回从该输入流中可以读取（或跳过）的字节数的估计值，而不会被下一次调用此输入流的方法阻塞。
+- `void close()`：关闭此输入流并释放与流相关联的任何系统资源。
+- `synchronized void mark(int readlimit)`：标记此输入流中的当前位置。
+- `synchronized void reset()`：将此流重新定位到上次在此输入流上调用mark方法时的位置。
+- `boolean markSupported()`：测试这个输入流是否支持mark和reset方法。此方法不抛出异常。
 
-`FilterInputStream/FilterOutputStream` 是用来提供装饰器类接口以控制特定输入/输出流 `InputStream/OutputStream` 的两个类，它它们的名字并不是很直观。`FilterInputStream/FilterOutputStream` 是从 I/O 类库中的基类 `InputStream/OutputStream` 派生而来，这两个类是创建装饰器的必要条件（这样它们才能为所有被装饰的对象提供统一接口）。
+![](./images/6-2 InputStream 继承体系.png)
 
-## 通过 FilterInputStream 从 InputStream 读取
+`InputStream` 抽象类是从不同的数据源中读取数据，不同的数据源都有相应的 `InputStream` 子类。如下所示：
 
-`FilterInputStream` 类能够完成两件截然不同的事情。其中，`DataInputStream` 允许我们读取不同的基本数据类型和 `String` 类型的对象（所有方法都以 “read” 开头，例如 readByte()、readFloat()等等）。搭配其对应的 `DataOutputStream`，我们就可以通过数据“流”将基本数据类型的数据从一个地方迁移到另一个地方。具体是那些“地方”由输入流的类决定。
+- `ByteArrayInputStream`：内部包含一个 `byte buf[]`用作缓冲区，其中包含可以从流中读取的字节。
+- `FileInputStream`：从文件系统中的文件获取输入字节。什么文件可用取决于主机环境。
+- `FilterInputStream`：作为“装饰器”的接口的子类。主要为其它的 `InputStream` 附加有用的功能。
+- `ObjectInputStream`：将 `ObjectOutputStream` 类序列化的原始数据恢复为对象。用于反序列化。
+- `PipedInputStream`：用于存储与 `PipedOutputStream` 相关的类传入的数据。实现“管道化”概念。
+- `SequenceInputStream`：表示其他输入流的逻辑级联。对一个有序的 `InputStream` 集合读取成一个 `InputStream`。
 
-其它 `FilterInputStream` 类则在内部修改 `InputStream` 的行为方式：是否缓冲，是否保留它所读过的行（允许我们查询行数或设置行数），以及是否允许把单个字符推回输入流等等。最后两个类看起来就像是为了创建编译器提供的（它们被添加进来可能是为了对“用 Java 构建编译器”实现提供支持），因此我们在一般编程中不会用到它们。
+其中，`FileInputStream` 也属于一种 `InputStream`，它的作用是为 “装饰器” 类提供基类。其中，“装饰器”类可以把属性或有用的接口与输入流连接在一起。
 
-在实际应用中，不管连接的是什么 I/O 设备，我们基本上都会对输入进行缓冲。所以当初 I/O 类库如果能默认都让输入进行缓冲，同时将无缓冲输入作为一种特殊情况（或者只是简单地提供一个方法调用），这样会更加合理，而不是像现在这样迫使我们基本上每次都得手动添加缓冲。
+要使用 `InputStream` 的话，就要使用相对应的子类进行操作。如对文件的操作使用 `FileInputStream`，需要缓冲区可以使用 `ByteArrayInputStream` 等等。
 
-下表是 `FilterInputStream` 的类型
+## OutputStream
 
-|类|功能|构造器参数|使用|
-|:---:|:---:|:---:|:---:|
-|DataInputStream|与 `DataOutputStream` 搭配使用，按照移植方式从流读取基本数据类型(int/char/long 等)|||
-|BufferedInputStream|使用它可以防止每次读取时都得进行实际写操作。代表“使用缓冲区”|||
-|LineNumberInputStream|跟踪输入流中的行号，可调用`getLineNumber()`和`setLineNumber(int)`|||
-|PushbackInputStream|具有能弹出一个字节的缓冲区，因此可以将读到的最后一个字符回退|||
+与输入流 `InputStream` 抽象类相似的是输出流 `OutputStream` 类也是一个抽象类，是输出字节流中的基类。
 
-## 通过 FilterOutputStream 向 OutputStream 写入
+```java
+public abstract class OutputStream implements Closeable, Flushable {
+    ...
+}
+```
 
-与 `DataInputStream` 对应的是 `DataOutputStream`，它可以将各种基本数据类型和 `String` 类型的对象格式化输出到“流”中，。这样一来，任何机器上的任何 `DataInputStream` 都可以读出它们。所有方法都以 `write` 开头，例如 `writeByte()`、`writeFloat()` 等等。
+`OutputStream` 抽象类除了实现 `Closeable` 接口外，还实现了 `Flushable` 接口，该接口提供了一个方法：
 
-`PrintStream` 最初的目的就是为了以可视化格式打印所有基本数据类型和 `String` 类型的对象。这和 `DataOutputStream` 不同，后者的目的是将数据元素置入“流”中，使 `DataInputStream` 能够可移植地重构它们。
+```java
+void flush() throws IOException;
+```
 
-`PrintStream` 内有两个重要方法：`print()` 和 `println()`。它们都被重载了，可以打印各种各种数据类型。`print()` 和 `println()` 之间的差异是，后者在操作完毕后会添加一个换行符。
+该方法主要是刷新输出，也就是将所有缓冲的数据发送到目的地。
 
-`PrintStream` 可能会造成一些问题，因为它捕获了所有 `IOException`（因此，我们必须使用 `checkError()` 自行测试错误状态，如果出现错误它会返回 `true`）。另外，`PrintStream` 没有处理好国际化问题。这些问题都在 `PrintWriter` 中得到了解决，这在后面会讲到。
+`OutputStream`类也定义了一个抽象方法：
 
-`BufferedOutputStream` 是一个修饰符，表明这个“流”使用了缓冲技术，因此每次向流写入的时候，不是每次都会执行物理写操作。我们在进行输出操作的时候可能会经常用到它。
+```java
+public abstract void write(int b) throws IOException;
+```
 
-下表是 `FilterOutputStream` 类型
+该方法是将指定的字节写入输出流。`OutputStream` 提供了两个具体的 `write()` 方法用于输出字节，且都调用了抽象的 `write()` 方法，因此，继承了 `OutputStream` 的子类只需要实现抽象 `write()` 方法即可。下面列出 `OutputStream` 抽象类实现的方法，这些方法都会抛出 `IOException` 异常。
 
-|类|功能|构造器参数|使用|
-|:---:|:---:|:---:|:---:|
-|DataOutputStream|与 `DataInputStream` 搭配使用，因此可以按照移植方式向流中写入基本数据类型(int/char/long 等)|||
-|PrintStream|用于产生格式化输出。其中`DataOutputStream`处理数据的存储，`PrintStream`处理显示|||
-|BufferedOutputStream|使用它以避免每次发送数据时都进行实际的写操作。代表“使用缓冲区”。可以调用`flush()`清空缓冲区|||
+- `void write(byte b[])`：字节数组写入输出流。
+- `void write(byte b[], int off, int len)`：将`b[]` 字节数组从`off`下标起始的长度为`len` 的子字节数组写入输出流。
+- `void flush()`：刷新输出流。
+- `void close()`：关闭流并释放与之相关联的系统资源。
 
-## Reader 和 Writer
+![](./images/6-3 OutputStream继承体系.png)
 
-Java 1.1 对基本的 I/O 流类库做了重大的修改。你初次遇到 `Reader` 和 `Writer` 时，可能会以为这两个类是用来代替 `InputStream` 和 `OutputStream` 的，但实际上并不是这样。尽管一些原始的 “流” 类库已经过时（如果使用它们，编译器会发出警告），但是 `InputStream` 和 `OutputStream` 在面向字节 I/O 这方面仍然发挥着及其重要的作用，而 `Reader` 和 `Writer` 则提供兼容 `Unicode` 和面向字符 I/O 的功能。另外：
+`OutputStream` 抽象类决定数据要去往的目标，这些目标都有相应的 `OutputStream` 子类。如下所示：
 
-1. Java 1.1 往 `InputStream` 和 `OutputStream` 的继承体系中又添加了一些新类，所以这两个类显然是不会被取代的。
-2. 有时我们必须把来自 “字节” 层级结构中的类和来自 “字符” 层次结构中的类结合起来使用。为了达到这个目的，需要用到 “适配器（adapter）类”：`InputStreamReader` 可以把 `InputStream` 转换为 `Reader`，而 `OutputStreamWriter` 可以把 `OutputStream` 转换为 `Writer`。
+- `ByteArrayOutputStream`：内部包含一个 `byte buf[]` 缓冲区，将数据写入时会先存储在缓冲区。
+- `FileOutputStream`：将数据写入到文件系统中的文件。文件是否可用或可能被创建取决于底层平台。
+- `FilterOutputStream`：作为“装饰器”的接口的子类。主要为其它的 `OutputStream` 类提供数据转换或提供附加功能。
+- `ObjectOutputStream`：将 Java 对象的原始数据类型和图形写入到 `OutputStream`。用于对象序列化。
+- `PipedOutputStream`：任何写入 `PipedOutputStream` 的数据都会自动存储在相关`PipedInputStream`类，实现“管道化”概念。
 
-设计 `Reader` 和 `Writer` 继承体系主要是为了国际化。老的 I/O 流继承体系仅支持 8 比特的字节流，并且不能很好地处理 16 比特的 `Unicode` 字符。由于 `Unicode` 用于字符国际化（Java 本身的 `char` 也是 16 比特的 `Unicode`），所以添加 `Reader` 和 `Writer` 继承体系就是为了让所有的 I/O 操作都支持 `Unicode`。另外，新类库的设计使得它的操作比就类库要快。
+其中，`FilterOutputStream` 为 “装饰器” 类提供了一个基类；“装饰器” 类把属性或者有用的接口与输出流连接了起来，`FilterOutputStream` 也属于 `OutputStream` 的一种。
 
-## 数据的来源和去处
+要使用 `OutputStream` 的话，就要使用相对应的子类进行操作。如对文件的操作使用 `FileOutputStream`，需要缓冲区可以使用 `ByteArrayOutputStream` 等等。
 
-几乎所有原始的 Java I/O 流类都有相应的 `Reader` 和 `Writer` 类来提供原生的 `Unicode` 操作。但是在某些场合，面向字节的 `InputStream` 和 `OutputStream` 才是正确的解决方案。特别是 `java.util.zip` 类库就是面向字节而不是面向字符的。因此，最明智的做法是尽量尝试使用 `Reader` 和 `Writer`，一旦代码没法成功编译，你就会发现此时应该使用面向字节的类库了。
+## Filter I/O
 
-下表展示了在两个继承体系中，信息的来源和去处（即数据物理上来自哪里又去向哪里）之间的对应关系：
+Java I/O 类库提供了 `Filter I/O` 作为所有装饰器类的基类。装饰器必须具有和它所装饰对象相同的接口，但它也可以扩展接口，不过这种情况只发生在个别 `Filter I/O` 类中。
 
-|来源与去处：Java 1.0 类|相应的 Java 1.1 类|
-|:---:|:---:|
-|InputStream|Reader <br/> 适配器： InputStreamReader|
-|OutputStream|Writer <br/> 适配器：OutputStreamWriter|
-|FileInputStream|FileReader|
-|FileOutputStream|FileWriter|
-|StringBufferInputStream（已弃用）|StringReader|
-|（无相应的类）|StringWriter|
-|ByteArrayInputStream|CharArrayReader|
-|ByteArrayOutputStream|CharArrayWriter|
-|PipedInputStream|PipedReader|
-|PipedOutputStream|PipedWriter|
+![](./images/6-4 Filter IO.png)
 
-总的来说，这两个不同的继承体系中的接口即便不能说完全相同，但也是非常相似的。
+`Filter IO` 是用来提供装饰器类接口，用以控制特定 `InputStream/OutputStream` 的两个类，这两个类是创建装饰器的必要条件。
 
-## 更改流的行为
+### FilterInputStream
 
-对于 `InputStream` 和 `OutputStream` 来说，我们会使用 `FilterInputStream` 和 `FilterOutputStream` 的装饰器子类来修改“流”以满足特殊需要。`Reader` 和 `Writer` 的类继承体系沿用了相同的思想——但是并不完全相同。
+`FilterInputStream` 类是继承于 `InputStream` 抽象类的子类，它的作用是用来 “封装其它的输入流，并为它们提供额外的功能”。
 
-在下表中，左右之间对应关系的近似程度现比上一个表格更加粗略一些。造成这种差别的原因是类的组织形式不同，`BufferedOutputStream` 是 `FilterOutputStream` 的子类，但 `BufferedWriter` 却不是 `FilterWriter` 的子类（尽管 `FilterWriter` 是抽象类，但却没有任何子类，把它放在表格里只是占个位置，不然你可能奇怪 `FilterWriter` 上哪去了）。然而，这些类的接口却又十分相似。
+```java
+public class FilterInputStream extends InputStream {
+    protected volatile InputStream in;
+    
+    protected FilterInputStream(InputStream in) {
+        this.in = in;
+    }
+    ...
+}
+```
 
-|过滤器：Java 1.0 类|相应的 Java 1.1 类|
-|:---:|:---:|
-|FilterInputStream|FilterReader|
-|FilterOutputStream|FilterWriter（抽象类，没有子类）|
-|BufferedInputStream|BufferedReader（也有`readLine()`）|
-|BufferedOutputStream|BufferedWriter|
-|DataInputStream|使用DataInputStream（如果必须用到`readLine()`，那你就得使用BufferedReader。否则，一般情况下就用DataInputStream|
-|PrintStream|PrintWriter|
-|LineNumberInputStream|LineNumberReader|
-|StreamTokenizer|StringTokenizer（使用具有Reader参数的构造器）|
-|PushbackInputStream|PushbackReader|
+`FilterInputStream` 调用构造方法时，需传入 `InputStream` 对象，且本身继承与 `InputStream` 抽象类，简单地覆盖了所有 `InputStream` 的方法，因此 `FilterInputStream` 主要是给传入的 `InputStream` 对象提供附加的方法和为已有的方法在内部附加功能。
 
-有一条限制需要明确：一旦使用 `readLine()`，我们就不应该用 `DataInputStream`（否则，编译时会得到使用了过时方法的警告），而应该使用 `BufferedReader`。除了这种情况之外的情形中，`DataInputStream` 仍是 I/O 类库的首选成员。
+`FilterInputStream`类的常用子类有：
 
-为了使用时更容易过渡到 `PrintWriter`，它提供了一个既能接受 `Writer` 对象又能接受任何 `OutputStream` 对象的构造器。`PrintWriter` 的格式化接口实际上与 `PrintStream` 相同。
+- `DataInputStream`：允许从数据流中读取原始的 Java 类型。一般与 `DataOutputStream` 搭配使用。
+- `BufferedInputStream`：在读取字节时，在内部使用缓冲区提高读取性能。
+- `PushbackInputStream`：创建单个字节输入缓冲区，允许输入流在被读取后回退一个字节。
 
-Java 5 添加了几种 `PrintWriter` 构造器，以便在将输出写入时简化文件的创建过程，你马上就会见到他们。
+### FilterOutputStream
 
-其中一种 `PrintWriter` 构造器还有一个执行 `flush` 的选项。如果构造器设置了该选项，就会在每个 `println()` 调用之后，自动执行 `flush`。
+`FilterOutputStream` 类是继承于`OutputStream` 抽象类的子类，它的作用是用来 “封装其它的输出流，并为它们提供额外的功能”。
 
-## 未发生改变的类
+```java
+public class FilterOutputStream extends OutputStream {
+    protected OutputStream out;
 
-有一些类在 Java 1.0 和 Java 1.1 之间未做改变。
+    public FilterOutputStream(OutputStream out) {
+        this.out = out;
+    }
+    ...
+}
+```
 
-|以下这些 Java 1.0 类在 Java 1.1 中没有相应类|
-|:---:|
-|DataOutputStream|
-|File|
-|RandomAccessFile|
-|SequenceInputStream|
+使用 `FilterOutputStream` 创建对象时，需要传入一个 `OutputStream` 对象，对该 `OutputStream` 对象在 `FilterOutputStream` 内部转换数据或提供附加功能。如是否缓存、是否允许查询或设置行数等。
 
-特别是 `DataOutputStream`，在使用时没有任何变化；因此如果想以可传输的格式存储和检索数据，请用 `InputStream` 和 `OutputStream` 继承体系。
+`FilterOutputStream` 类的常用子类有：
 
-## RandomAccessFile 类
+- `BufferedOutputStream`：提供了对`OutputStream` 的缓冲功能，内部提供缓冲区存储数据，这样避免数据直接写入流，从而提高性能。
+- `DataOutputStream`：可以将原始Java数据类型写入到流中，然后应用可以使用 `DataInputStream` 来读取数据。
+- `PrintStream`：以合适的格式打印任何数据类型值。
 
-`RandomAccessFile` 适用于由大小已知的记录组成的文件，所以我们可以使用 `seek()` 将文件指针从一条记录移动到另一条记录，然后对记录进行读取和修改。文件中记录的大小不一定都相同，只要我们能确定那些记录有多大以及它们在文件中的位置即可。
 
-最初，我们可能难以相信 `RandomAccessFile` 不是 `InputStream` 或者 `OutputStream` 继承体系中的一部分。除了实现了 `DataInput` 和 `DataOutput` 接口（`DataInputStream` 和 `DataOutputStream` 也实现了这两个接口）之外，它和这两个继承体系没有任何关系。它甚至都不使用 `InputStream` 和 `OutputStream` 类中已有的任何功能。它是一个完全独立的类，其所有的方法（大多数都是 `native` 方法）都是从头开始编写的。这么做是因为 `RandomAccessFile` 拥有和别的 I/O 类型本质上不同的行为，因为我们可以在一个文件内向前和向后移动。在任何情况下，它都是自我独立的，直接继承自 `Object`。
-
-从本质上来讲，`RandomAccessFile` 的工作方式类似于把 `DataIunputStream` 和 `DataOutputStream` 组合起来使用。另外它还有一些额外的方法，比如使用 `getFilePointer()` 可以得到当前文件指针在文件中的位置，使用 `seek()` 可以移动文件指针，使用 `length()` 可以得到文件的长度。另外，其构造器还需要传入第二个参数（和 C 语言中的 `fopen()` 相同）用来表示我们是准备对文件进行 “随机读”（r）还是“读写”（rw）。它并不支持只写文件，从这点来看，如果当初 `RandomAccessFile` 能设计成继承自 `DataInputStream`，可能也是个不错的实现方式。
-
-在 Java 1.4 中，`RandomAccessFile` 的大多数功能（但不是全部）都被 nio 中的内存映射文件（mmap）取代。
-
-# 字节流
-
-字节流是继承自输入字节流`InputStream`与输出字节流`OutputStream`，它们都是抽象类，是字节流的父类。
-
-`InputStream`常见子类有：
-
-`FileInputStream`从文件中读取信息
-`ByteArrayInputStream`字节数组输入流
-`ObjectInputStream`序列化时使用一般和ObjectOutputStream一起使用
-`FilterInputStream`过滤输入流，为基础的输入流提供一些额外的操作。
 
 # 字符流
 
-`Reader`类是Java IO中所有`Reader`的基类。`Writer`类是Java IO中所有`Writer`的基类。
+JDK 1.1 对原始的 `I/O` 流类库做了重大的修改。这里添加了与 `I/O` 流类相对应的 `Reader` 和 `Writer` 类库，但它们不是用来代替 `InputStream` 和 `OutputStream` 的，而是提供兼容 `Unicode` 和面向字符 `I/O` 的功能。
 
+设计 `Reader` 和 `Writer` 继承体系主要是为了国际化。面向字节的 `I/O` 体系仅支持 8 bit 的字节流，并不能很好地处理 16 bit 的 `Unicode` 字符。而 `Unicode` 主要用于字符国际化，所以添加 `Reader` 和 `Writer` 继承体系就是为了让所有的 `I/O` 操作都支持 `Unicode`。`Reader/Writer` 的设计比面向字节的 `I/O` 体系操作快。
+
+但是 `I/O` 流体系在面向字节 `I/O` 这方面仍然发挥着重要的作用，且有时候与 `Reader/Writer` 体系结合起来使用，这时就需要用到适配器：
+
+- `InputStreamReader`：把 `InputStream` 转换为 `Reader`。
+- `OutputStreamWriter`：把 `OutputStream` 转换为 `Writer`。
+
+总的来说，这两个不同的继承体系中的接口即便不能说完全相同，但也是非常相似的。
+
+## Reader
+
+`Reader` 是抽象类，是读取字符流的基类。
+
+```java
+public abstract class Reader implements Readable, Closeable {
+    ...
+}
+```
+
+`Reader` 抽象类除了实现 `Closeable` 接口外，还实现了 `Readable` 接口，该接口提供了一个方法：
+
+```java
+public int read(java.nio.CharBuffer cb) throws IOException;
+```
+
+`CharBuffer` 类拥有按顺序和随机地进行读写访问的方法，它表示一个内存中的缓冲区或者一个内存映像的文件。该方法尝试向着 `cb` 读入其可持有数量的 `char` 值。返回读入的 `char` 值的数量，或者当从这个 `Readable` 中无法再获得更多的值时返回 `-1`。
+
+`Reader` 抽象类有一个 `read()` 抽象方法：
+
+```java
+public abstract int read(char cbuf[], int off, int len) throws IOException;
+```
+
+该方法读取输入流并将字符以`off`为起始，`len` 个字节数存储在 `cbuf` 字符数组中。`Reader` 类中有三个具体的 `read()` 方法用于读取字符，这三个方法都调用了 `read()` 抽象方法。因此，继承 `Reader` 类的子类只要实现此方法即可。下面简单介绍一下 `Reader` 类具有的方法，这些方法都会抛出 `IOException` 异常。
+
+- `int read(char cbuf[])`：将字符读入数组，返回实际成功读取的字符数。遇到文件尾时返回 `-1`。
+- `int read()`：读取一个字符。
+- `int read(CharBuffer target)`：将字符读入指定的字符缓冲区。
+- `long skip(long n)`：跳过 n 个输入字符，返回跳过的字符数。
+- `boolean ready()`：判断流是否准备好被读取。
+- `boolean markSupported()`：判断当前流是否支持标记流。该方法不会抛出异常。
+- `void mark(int readAheadLimit)`：标记流中的当前位置。
+- `void reset()`：重置流的读取位置为 `mark` 的标记位置。
+- `abstract void close()`：关闭流并释放与之相关联的系统资源。
+
+![](./images/6-5 Reader继承体系.png)
+
+`Reader` 抽象类提供的子类有：
+
+- `BufferedReader`：从字符输入流中读取文本并缓冲字符，以提供字符，数组和行的高效读取。
+- `CharArrayReader`：实现了一个字符缓冲区，用作字符输入流。
+- `FilterReader`：用于读取过滤后的字符流的抽象类。
+- `InputStreamReader`：用于将字节流转换到字符流，转换时可以设置字符集。
+- `PipedReader`：用于存储与 `PipedWriter` 相关的类传入的数据。实现“管道化”概念管道。
+- `StringReader`：将 `String` 当作数据源读取的字符流。
+
+## Writer
+
+`Writer` 是抽象类，是写出字符流的基类。
+
+```java
+public abstract class Writer implements Appendable, Closeable, Flushable {
+    ...
+}
+```
+
+`Writer` 抽象类除了实现了 `Closeable` 和 `Flushable` 接口，还有一个 `Appendable` 接口，这个接口有两个用于添加单个字符和字符序列的方法：
+
+```java
+Appendable append(char c)
+Appendable append(CharSequence s)
+```
+
+向这个 `Appendable` 追加给定的字符或者给定的字符序列，返回 `this`。
+
+`CharSequence` 接口描述了一个 char 值序列的基本属性，`String`、`CharBuffer`、`StringBuilder` 和 `StringBuffer` 都实现了它。
+
+在流类的家族中，只有 `Writer` 实现了 `Appendable` 。
+
+`Writer` 抽象类有一个 `write()` 抽象方法：
+
+```java
+public abstract void write(char cbuf[], int off, int len) throws IOException;
+```
+
+该方法是将 `cbuf[]` 字符数组以 `off` 为起点，长度为 `len` 的字符数组写入，而不是全部。`Writer` 也有四个具体的 `write()` 方法，调用了 `write()` 抽象方法。因此，每个继承了 `Writer` 的子类，只要实现这个抽象方法即可。下面给出 `Writer` 抽象类给的具体方法，这些方法会抛出 `IOException` 异常。
+
+- `void write(int c)`：写入一个字符。
+- `void write(char cbuf[])`：写入字符数组。
+- `void write(String str)`：写入字符串。
+- `void write(String str, int off, int len)`：写入字符串从`off` 起始，长度为`len`子字符串。
+- `Writer append(CharSequence csq)`：将指定的字符序列追加到`Writer`。
+- `Writer append(CharSequence csq, int start, int end)`：将指定的字符序列的子序列追加到`Writer`，子序列是字符序列从 `start` 起始到 `end` 结束的字符序列。
+- `Writer append(char c)`：将指定的字符追加到`Writer`。
+- `abstract void flush()`：刷新缓冲区。
+- `abstract void close()`：关闭流并释放与之相关联的系统资源。
+
+![](./images/6-6 Writer 继承体系.png)
+
+`Writer` 抽象类提供的子类有：
+
+- `BufferedWriter`： 将文本写入字符输出流，该字符流具有缓冲区，用以缓冲字符，以提供单个字符，数组和字符串的高效写入。
+- `CharArrayWriter`：以数组作为目标的输出流，实现了动态增长的字符缓冲区。
+- `FilterWriter`：用于编写过滤后的字符流的抽象类。
+- `OutputStreamWriter`：用于将字符流转换到字节流，转换时可以设置字符集。
+- `PipedWriter`：任何写入 `PipedWriter` 的数据都会自动存储在相关`PipedReader`类，实现“管道化”概念。
+- `PrintWriter`：`PrintWriter` 本质上是 `PrintStream` 的字符形式的版本。
+- `StringWriter`：将数据写入到 `String` 的字符流。
+
+
+## Filter Reader/Writer
+
+`Reader` 与 `Writer` 的类继承层次结构沿用了 `Filter I/O` 体系的思想，使用装饰器设计模式进行灵活的搭配，但也有不同的地方，如 `BufferedWriter` 并不是 `FilterWriter` 的子类，而 `BufferedOutputStream` 是 `FilterOutputStream` 的子类。
+
+![](./images/6-7 IO 与 RW 对比图.png)
+
+### FilterReader
+
+`FilterReader` 抽象类继承于`Reader`抽象类，是用于读取过滤后的字符流的抽象类。
+
+```java
+public abstract class FilterReader extends Reader {
+    protected Reader in;
+
+    protected FilterReader(Reader in) {
+        super(in);
+        this.in = in;
+    }
+    ....
+}
+```
+
+`FilterReader` 调用构造方法时，需要传入一个 `Reader` 对象，而 `FilterReader` 本身也是继承了 `Reader` 抽象类，因此，`FilterReader` 抽象类只是重写这些方法，并在这些方法中调用传入的 `Reader` 对象，给 `Reader` 对象在 `FilterReader` 内部提供数据转换或附加一些功能等。
+
+`FilterInputStream`抽象类只有一个子类，即 `PushbackReader`。该类主要是一个字符流读取器，允许将字符推回到流中。
+
+### FilterWriter
+
+`FilterWriter` 抽象类继承于 `Writer` 抽象类，是用于编写过滤后的字符流的抽象类。
+
+```java
+public abstract class FilterWriter extends Writer {
+    protected Writer out;
+
+    protected FilterWriter(Writer out) {
+        super(out);
+        this.out = out;
+    }
+    ...
+}
+```
+
+`FilterWriter` 与 `FilterReader` 功能相同，都是对传入的 `Writer` 对象进行包装，在内部附加功能等。`FilterWriter` 抽象类没有提供子类。
+
+# 用途
+
+尽管可以用不同的方式来组合 `I/O` 流类，但常用的也就其中几种。如下例子所示，给出几种 `I/O` 的用法参照。
+
+## 访问文件
+
+在 Java I/O 中，使用 `FileInputStream` 从文件中读取并使用 `FileOutputStream` 将数据写入另一个文件，当然，也可以在内存中使用 `FileInputStream` 读取出来的字节：
+
+```java
+public class AccessFileExample {
+    public static void main(String[] args) {
+        File file = new File("se/io/src/iotest.txt");
+        if (!file.exists()) {
+            throw new RuntimeException("读取的文件不存在！");
+        }
+        InputStream in = null;
+        OutputStream os = null;
+        try {
+            // 创建文件字节读取流对象时，必须明确与之关联的数据源
+            in = new FileInputStream(file);
+            os = new FileOutputStream("se/io/src/iotemp.txt");
+            // 调用读取流对象的读取方法
+            int len = 0;
+            byte[] buf = new byte[4096];
+            while ((len = in.read(buf)) != -1) {
+                os.write(buf, 0, len);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            try {
+                Objects.requireNonNull(in).close();
+                Objects.requireNonNull(os).close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
+
+这里在使用 `FileReader` 与 `FileWriter` 的方式访问文件：
+
+```java
+public class AccessFileExample {
+    public static void main(String[] args) {
+        File file = new File("se/io/src/iotest.txt");
+        if (!file.exists()) {
+            throw new RuntimeException("读取的文件不存在！");
+        }
+        try (
+                Reader r = new FileReader(file);
+                Writer w = new FileWriter("se/io/src/iotemp.txt")
+                ) {
+            // 调用读取流对象的读取方法
+            int len = 0;
+            char[] buf = new char[4096];
+            while ((len = r.read(buf)) != -1) {
+                w.write(buf, 0, len);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+`FileReader` 和 `FileWriter` 操作纯文本字符的文件最为合适。
+
+## 缓存
+
+在访问文件时，可以使用 Java 提供的 `Buffered I/O` 将其包装起来增加缓存的功能。如下所示：
+
+```java
+public class AccessFile {
+    public static void main(String[] args) {
+        File file = new File("se/io/src/iotest.txt");
+        if (!file.exists()) {
+            throw new RuntimeException("读取的文件不存在！");
+        }
+        InputStream in = null;
+        OutputStream os = null;
+        try {
+            // 创建文件字节读取流对象时，必须明确与之关联的数据源
+            in = new BufferedInputStream(new FileInputStream(file));
+            os = new BufferedOutputStream(new FileOutputStream("se/io/src/iotemp.txt"));
+            // 调用读取流对象的读取方法
+            int len = 0;
+            byte[] buf = new byte[4096];
+            while ((len = in.read(buf)) != -1) {
+                os.write(buf, 0, len);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            try {
+                Objects.requireNonNull(in).close();
+                Objects.requireNonNull(os).close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
+
+`Reader/Writer` 体系的使用 `BufferedReader` 和 `BufferedWriter` 两个类来增加缓存功能。
+
+```java
+public class AccessFile {
+    public static void main(String[] args) {
+        File file = new File("se/io/src/iotest.txt");
+        if (!file.exists()) {
+            throw new RuntimeException("读取的文件不存在！");
+        }
+        try (
+                Reader r = new BufferedReader(new FileReader(file));
+                Writer w = new BufferedWriter(new FileWriter("se/io/src/iotemp.txt", true))
+        ) {
+            // 调用读取流对象的读取方法
+            int len = 0;
+            char[] buf = new char[4096];
+            while ((len = r.read(buf)) != -1) {
+                w.write(buf, 0, len);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+```
+
+在这里，创建 `FileWriter` 对象时，使用了 `FileWriter(String fileName, boolean append)` 构造方法，该构造方法的第二个为 `true` 时，是追加写入，而不是覆盖写入。
+
+## 文件合并
+
+有时需要使用 `SequenceInputStream` 流将多个文件合并在一起。如下所示：
+
+```java
+public class MergeFiles {
+    public static void main(String[] args) {
+        try (
+                InputStream in1 = new FileInputStream("se/io/src/FileOutput.txt");
+                InputStream in2 = new FileInputStream("se/io/src/iotest.txt");
+                InputStream in3 = new FileInputStream("se/io/src/FileWriter.txt");
+                OutputStream os = new FileOutputStream("se/io/src/MergeFile.txt", true);
+                SequenceInputStream sis = new SequenceInputStream(list(in1, in2, in3))
+                ) {
+            byte[] buf = new byte[4096];
+            int len = 0;
+            while ((len = sis.read(buf)) != -1) {
+                os.write(buf, 0, len);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static Enumeration<InputStream> list(InputStream... ins) {
+        List<InputStream> list = Arrays.asList(ins);
+
+        Iterator<InputStream> it = list.iterator();
+
+        return new Enumeration<>() {
+
+            @Override
+            public boolean hasMoreElements() {
+                return it.hasNext();
+            }
+
+            @Override
+            public InputStream nextElement() {
+                return it.next();
+            }
+        };
+    }
+}
+```
+
+
+## 转换
+
+有时候也需要在 `InputStream/OutputStream` 和 `Reader/Writer` 之间进行转换，在 Java I/O 中提供了 `InputStreamReader/OutputStreamWriter` 两个类用于转换。
+
+![](./images/6-8 转换流.png)
+
+```java
+public class StreamTransition {
+    public static void main(String[] args) {
+        try (
+                Reader reader = new BufferedReader(
+                        new InputStreamReader(
+                                new FileInputStream("se/io/src/FileWriter.txt")));
+                Writer writer = new BufferedWriter(
+                        new OutputStreamWriter(
+                                new FileOutputStream("se/io/src/FileWriter2.txt")))
+                ) {
+            int c = 0;
+            while ((c = reader.read()) != -1) {
+                writer.write(c);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+## 序列化
+
+Java I/O 提供了 `ObjectOutputStream` 和 `ObjectInputStream` 实现序列化与反序列化操作。但要注意，序列化的类需实现 `java.io.Serializable` 接口，且需要序列化的类中的属性又不需要序列化的，使用 `transient` 关键字修饰。如下所示：
+
+```java
+public class Student implements Serializable {
+    private static final long serialVersionUID = -4496225960550340595L;
+    private String name;
+    private Integer age;
+    ...省略getter与setter...
+}
+public class JdkSerializer {
+    public static void main(String[] args) {
+        Student s1 = new Student();
+        s1.setName("小赵");
+        s1.setAge(24);
+
+        try (
+                // 序列化对象到文件中
+                ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("serializer"))
+                ) {
+            oos.writeObject(s1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try (
+                ObjectInputStream ois = new ObjectInputStream(new FileInputStream("serializer"));
+                ) {
+            Student s2 = (Student) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+## 格式输出
+
+`PrintStream` 继承于 `FilterOutputStream`，主要是将各种输出流以各种格式进行打印，可以将打印的数据打印在文件中，也可以是控制台等。
+
+```java
+public class FileOutput {
+    public static void main(String[] args) {
+        try (
+                PrintStream ps = new PrintStream(new FileOutputStream("se/io/src/FileOutput.txt"))
+                ) {
+            ps.println("同学们好!");
+            ps.printf("  我叫%s, 是本学期新来的%s教师，刚毕业于%s。", "晓红", "语文", "清华大学");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+效果如下：
+
+![](./images/6-9 PrintStream案例结果.png)
+
+`PrintWriter` 的用法与 `PrintStream` 基本相同。`PrintWriter` 类实现了在 `PrintStream` 类中的所有 `print` 方法，而 `PrintWriter` 构造方法接受的对象比 `PrintStream` 要更全，一般情况下选择 `PrintWriter` ，灵活性更强，且 `PrintWriter` 解决了 `PrintStream` 中的国际化问题。
 
 # 总结
 
-Java 的 I/O 流类库的确能够满足我们的基本需求：我们可以通过控制台、文件、内存块，甚至因特网进行读写。通过继承，我们可以创建新类型的输入和输出对象。并且我们甚至可以通过重新定义 “流” 所接受对象类型的 `toString()` 方法，进行简单的扩展。当我们向一个期望收到字符串的方法传送一个非字符串对象时，会自动调用对象的 `toString()` 方法（这是 Java 中有限的 “自动类型转换” 功能之一）。
+Java I/O 类库在执行期间都将阻塞，直至确实被读入或写出。因此，如果不能被立即访问，就会将当前线程阻塞。
 
-在 I/O 流类库的文档和设计中，仍留有一些没有解决的问题。例如，我们打开一个文件用于输出，如果在我们试图覆盖这个文件时能抛出一个异常，这样会比较好（有的编程系统只有当该文件不存在时，才允许你将其作为输出文件打开）。在 Java 中，我们应该使用一个 `File` 对象来判断文件是否存在，因为如果我们用 `FileOutputStream` 或者 `FileWriter` 打开，那么这个文件肯定会被覆盖。
+在使用 Java I/O 类库时，调用 `close()` 会释放有限的操作系统资源。因此，过多的打开 `I/O` 流而没有关闭，系统资源就会被耗尽。关闭一个输出流的同时还会冲刷用于该输出流的缓冲区：所有被临时置于缓冲区中，以便用更大的包的形式传递的字节在关闭输出流时都将被送出。特别是，如果不关闭文件，那么写出字节的最后一个包可能将永远也得不到传递。当然，我们还可以用 `flush()` 方法来人为地冲刷这些输出。
 
-I/O 流类库让我们喜忧参半。它确实挺有用的，而且还具有可移植性。但是如果我们没有理解“装饰器”模式，那么这种设计就会显得不是很直观。所以，它的学习成本相对较高。而且它并不完善，比如说在过去，我不得不编写相当数量的代码去实现一个读取文本文件的工具——所幸的是，Java 7 中的 nio 消除了此类需求。
+Java I/O 流类库中，可以为其划分以下分类：
 
-一旦你理解了装饰器模式，并且开始在某些需要这种灵活性的场景中使用该类库，那么你就开始能从这种设计中受益了。到那时候，为此额外多写几行代码的开销应该不至于让人觉得太麻烦。但还是请务必检查一下，确保使用文件一章中的库和技术没法解决问题后，再考虑使用本章的 I/O 流库。
+- 按流的流向，可以分为输入流和输出流；
+- 按流的数据单元，可以分为字节流和字符流；
+- 按流的功能，可以分为节点流和处理流。
 
+![](./images/6-10 Java IO 分类.png)
+
+Java I/O 流类库能够满足基本需求：通过控制台、文件、内存块甚至因特网进行读写。基本覆盖了常用的功能点，使用装饰器模式灵活的搭配，而且还具有可移植性。但也增加了代码的复杂性，必须创建许多类才能得到所希望的单个 `I/O` 对象，如果没有理解装饰器模式，那 Java I/O 的设计使得学习的成本相对较高。一旦理解了装饰器模式，并且开始在某些需要这种灵活性的场景中使用，那就能从中受益。

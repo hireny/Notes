@@ -28,7 +28,7 @@ C C# C++ Clojure Groovy Java JavaScript Jython Kotlin Python Ruby SQL Scala Shel
 
 由上面的例子，我们可以得知使用 `Stream` 的步骤：
 
-![Stream流式操作](./images/Stream操作)
+![Stream流式操作](./images/Stream操作.png)
 
 1. 创建流。例如上面的 `Stream.of()`
 2. 对流的中间操作。例如上面的 `sorted()`，在流中对数据进行排序。
@@ -669,7 +669,7 @@ Nov Dec
 
 # 终端操作
 
-终端操作就是为了结束流的中间操作，并返回结果。至此无法在继续往后传递流。
+终端操作就是为了结束流的中间操作，并返回结果。至此无法再继续往后传递流。
 
 终端操作都有哪些操作呢？我们简单来看下：`forEach()`、`forEachOrdered()`、`toArray()`、`collect()`、`reduce()`、`min()`、`max()`、`count()`、`anyMatch()`、`allMatch()`、`noneMatch()`、`findFirst()`、`findAny()`等。下面详细介绍一下这些终端操作的使用。
 
