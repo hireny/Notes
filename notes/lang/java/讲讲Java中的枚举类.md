@@ -1,930 +1,308 @@
-在 JDK 1.5 版本之前，通常会使用 `int` 常量表示枚举，但使用 `int` 类型可能存在两个问题：
-
-1. `int` 类型本身并不具备安全性，假如在定义 `int` 时少些了 `final` 关键字，那么就存在被其他人修改的风险，而反观枚举类：它 “天然” 就是一个常量类，不存在被修改的风险。
-2. 使用 int 类型的语义不够明确，比如我们在控制台打印时如果只输出 1...2...3 这样的数字，我们肯定不知道它代表的是什么含义。
-
-枚举为什么是线程安全的？
-
-
-
-为什么用枚举类型？
-
-1. 使用 EnumClass.values()，我们所用的常量可以一一列举出来，即枚举。
-2. 每一个常量可以附带信息和行为，封装性好方便使用。
-
-枚举的 7 中使用方法
-
-1. 常量
-2. switch
-3. 枚举中增加方法
-4. 覆盖枚举方法
-5. 实现接口
-6. 在接口中组织枚举类
-7. 使用枚举集合
-
-
-# 枚举
-
-- 一、定义
-- 二、原理分析
-- 三、枚举的方法
-- 四、枚举的特性
-- 五、EnumSet与EnumMap
-- 六、枚举的应用
-
-
-## 一、定义
-
-枚举（Enum）是在Java 1.5中添加的新特性，通过关键字`enum`来定义枚举类。枚举类是一种特殊类，它和普通类一个可以使用构造器、定义成员变量和方法，也能实现一个或多个接口，但枚举类不能继承其它类。它有以下几个特点：
-
-- 定义的 `enum` 类型总是继承自 `java.lang.Enum`，且无法被继承
-- 只能定义出 `enum` 的实例，而无法通过 `new` 操作符创建 `enum` 的实例
-- 定义的每个实例都是引用类型的唯一实例
-- 可以将 `enum` 类型用于 `switch` 语句
-
-
-## 二、原理分析
-
+当进行编程开发时，需要一组固定的常量来表示需要的类型，如使用一组 `int` 常量表示一周的日期：
 
 ```java
-public enum  Color {
-    RED, GREEN, BLACK, BLUE;
-}
-public void main(String[] args) {
-	for (Color color : Color.values()) {
-		System.out.println(color);
-	}
+public class Week {
+    public static final int MONDAY = 1;
+    public static final int TUESDAY = 2;
+    public static final int WEDNESDAY = 3;
+    public static final int THURSDAY = 4;
+    public static final int FIRDAY = 5;
+    public static final int SATURDAY = 6;
+    public static final int SUNDAY = 7;
 }
 ```
 
-输出结果为：
+这种方法称作 `int` 枚举模式。接下来设计一个使用日期的方法：
 
 ```java
-RED
-GREEN
-BLACK
-BLUE
+public static boolean alarm(LocalTime time, int[] weeks) {
+    ......
+}
 ```
 
-反编译出 `java` 文件大概如下：
+上述设置闹铃的方法中，第二个参数是传入日期数组，在 `weeks` 数组中的每个 `int` 值都必须在 `1~7` 之间，但因为传入的 `int` 值可以是任何值，不具有类型安全性，也几乎没有描述性可言，且编译时也不会提出任何警告；而且需要遍历 `Week` 类中所有表示星期的值的方式也没有。当然，这种设置常量的类型也不仅局限在 `int` 类型中，也可以使用 `String` 设置常量，被称为 `String` 枚举模式。但是，这种使用 `int`、`String` 或其它类型设置的枚举模式不是太可靠。
+
+## 枚举
+
+在这种情况下，Java 在 1.5 版本中引入枚举类型来解决 `int` 和 `String` 枚举模式所带有的缺点。使用 `enum` 定义的枚举类，是 `Object` 的子类，继承自 `java.lang.Enum<E extends Enum<E>>` 抽象类，不能继承其它类。
 
 ```java
-// 继承自Enum，final修饰，无法被继承
-public final class Color extends Enum {
-	// 为了避免，返回的数组修改，而引起内部values值的改变，返回的是原数组的副本
-	public static Color[] values() {
-		return (Color[]) $VALUES.clone();
-	}
-	// 按名字获取枚举实例
-	public static Color valueOf(String name) {
-		return (Color) Enum.valueOf(em / Color, name);
-	}
-	// private构造方法，确保外部无法调用new操作符:
-    private Color() {}
-    // 每个实例均为全局唯一:
-    public static final Color RED;
-    public static final Color GREEN;
-    public static final Color BLACK;
-    public static final Color BLUE;
-    //
-    public static final Color $VALUES[];
-    
-    // 静态域初始化，说明在类加载的cinit阶段就会被实例化，jvm能够保证类加载过程的线性安全
-    static {
-    	RED = new Color("RED", 0);
-    	GREEN = new Color("GREEN", 1);
-    	BLACK = new Color("BLACK", 2);
-    	BLUE = new Color("BLUE", 3);
-    	$VALUES = (new Color[]{
-    		RED, GREEN, BLACK, BLUE
-    	});
+public abstract class Enum<E extends Enum<E>>
+        implements Comparable<E>, Serializable {
+    ......
+}
+```
+
+接下来，将上面的 `Week` 类重新编写：
+
+```java
+public enum  Week {
+    MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FIRDAY,SATURDAY,SUNDAY;
+}
+```
+
+在以参数方式传入方法：
+
+```java
+public static boolean alarm(LocalTime time, Week[] weeks) {
+    ......
+}
+```
+
+重写编写后，`Week[]` 作为第二个参数，传入的每个 `Week` 值都是 `Week` 枚举类中的有效值之一，保证了编译时的类型安全。
+
+## 原理
+
+但其实，在 `Week` 枚举类中设置的枚举值，如`MONDAY`、`TUESDAY` ... `SUNDAY` 其实本质上是 `int` 值。
+
+```java
+public final class Week extends Enum {
+    public static final Week MONDAY;
+    public static final Week TUESDAY;
+    public static final Week WEDNESDAY;
+    public static final Week THURSDAY;
+    public static final Week FIRDAY;
+    public static final Week SATURDAY;
+    public static final Week SUNDAY;
+    private Week() {...}
+    static {...}
+    ......
+}
+```
+
+代码编译后会获得使用 `public static final` 修饰的枚举常量，且通过 `static {}` 代码块为每个枚举常量赋值，之后，因为没有公共的构造器，不能通过 `new` 的方式创建实例，因此只有声明过的枚举常量。
+
+
+## 特性
+
+枚举类型除了完善之前的 `int` 或 `String` 枚举模式之外，继承自 `java.lang.Enum<E extends Enum<E>>` 的枚举类还可以使用 `Enum` 抽象类提供的 `value()` 方法返回 `enum` 实例的数组且元素严格保持其声明时的顺序：
+
+```java
+Arrays.toString(Week.values());
+/**
+ * [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FIRDAY, SATURDAY, SUNDAY]
+ */
+```
+
+提供的 `ordinal()` 方法和 `name()` 方法可以获取 `enum` 实例声明时的顺序（从 0 开始）和实例的常量名：
+
+```java
+for (Week value : Week.values()) {
+    System.out.println("Week 枚举中第" + value.ordinal() + "个常量名是：" + value.name() );
+}
+/**
+ * Week 枚举中第0个常量名是：MONDAY
+ * Week 枚举中第1个常量名是：TUESDAY
+ * Week 枚举中第2个常量名是：WEDNESDAY
+ * Week 枚举中第3个常量名是：THURSDAY
+ * Week 枚举中第4个常量名是：FIRDAY
+ * Week 枚举中第5个常量名是：SATURDAY
+ * Week 枚举中第6个常量名是：SUNDAY
+ */
+```
+
+但是星期的枚举天生就与 `int` 值相关联，但通过 `ordinal()` 方法返回的只是每个枚举常量在类型中的数字位置。而不是我们需要的关于星期几的数字，如星期一要返回 `1` 这样的数字。这样，我们可以将相关联的值保存在一个实例域中：
+
+```java
+public enum Week {
+    MONDAY(1),TUESDAY(2),WEDNESDAY(3),
+    THURSDAY(4),FIRDAY(5),
+    SATURDAY(6),SUNDAY(7);
+    private final int number;
+    Week(int number) {
+        this.number = number
     }
-}
-```
-
-从反编译的类中，可以看出，我们使用 `enum` 关键字编写的类，在编译阶段编译器会自动帮我们生成一份真正的JVM中运行的代码。
-
-`Enum`类接受一个继承自 `Enum` 的泛型（在反编译Java文件中没有体现泛型是因为泛型在编译阶段就会进行类型擦除，替换为具体的实现）。
-
-从反编译的 `Color` 类中可以看出，在`enum`关键字的类中，第一行（准确的说是第一个分号前）定义的变量，都会生成一个`Color`实例，且它是在静态域中进行初始化的，而静态域在类加载阶段的`cinit`中进行初始化，所以枚举对象是线程安全的，由JVM来保证。
-
-生成的枚举类有 `Color $VALUES[];`成员变量，外部可以通过`values()`方法获取当前枚举类的所有实例对象。
-
-
-## 三、枚举的方法
-
-```java
-public abstract class Enum<E extends Enum<E>> implements Comparable<E>, Serializable {
-	private final String name;
-	public final String name() {}
-	private final int ordinal;
-	public final int ordinal() {}
-	protected Enum(String name, int ordinal) {}
-	public String toString() {}
-	public final boolean equals(Object other) {}
-	public final int hashCode() {}
-	protected final Object clone() throws CloneNotSupportedException {}
-	public final int compareTo(E o) {}
-	public final Class<E> getDeclaringClass() {}
-	public static <T extends Enum<T>> T valueOf(Class<T> enumType, String name) {}
-	protected final void finalize() { }
-	private void readObject(ObjectInputStream in) throws IOException,ClassNotFoundException {}
-}
-```
-
-分析一下 `Enum` 类中的方法：
-
-**1.values()**  
-
-返回 `enum` 实例的数组，而且该数组中的元素严格保持在 `enum` 中声明的顺序，例如：
-
-```java
-Color.values();
-//RED
-//GREEN
-//BLACK
-//BLUE
-//[Lme.xx.xx.Color;@5b464ce8
-```
-
-**2.name()**  
-
-返回常量名，例如：
-
-```java
-String s = Color.RED.name();	// "RED"
-```
-
-**3.ordinal()**  
-
-返回定义的常量的顺序，从0开始计数，例如：
-
-```java
-int n = Color.BLACK.ordinal();	//  2
-```
-
-**4.compareTo(E o)**  
-
-用于比较相同类型的两个枚举常量的序数值，例如：
-
-```java
-int n = Color.BLACK.compareTo(Color.RED);	// 2
-```
-
-Enum类实现了 `Comparable` 接口，表明它是支持排序的，可以通过 `Collections.sort` 进行自动排序，实现了 `public final int compareTo(E o)` 接口，方法定义为 `final` 且其实现依赖的 `ordinal` 字段也是 `final` 类型，说明它只能根据 `ordinal` 排序，排序规则不可变
-
-```java
-public final int compareTo(E o) {
-	Enum<?> other = (Enum<?>)o;
-	Enum<E> self = this;
-	if (self.getClass() != other.getClass() && // optimization
-		self.getDeclaringClass() != other.getDeclaringClass())
- 		throw new ClassCastException();
-	return self.ordinal - other.ordinal;
-}
-```
-
-**5.equals(Object other)**  
-
-用于比较两个对象的相等性，例如：
-
-```java
-boolean n = Color.RED.equals(Color.BLACK);	// false
-```
-
-**6.getDeclaringClass()**  
-
-返回实例所属的 `enum` 类型，例如：
-
-```java
-Color.RED.getDeclaringClass();	// class me.xx.xx.Color
-```
-
-## 四、枚举的特性
-
-### 添加方法
-
-除了不能继承自一个 `enum` 之外，我们可以将 `enum` 看作一个常规的类。
-
-```java
-public enum OzWitch {
-    // Instances must be defined first, before methods:
-    WEST("Miss Gulch, aka the Wicked Witch of the West"),
-    NORTH("Glinda, the Good Witch of the North"),
-    EAST("Wicked Witch of the East, wearer of the Ruby " +
-            "Slippers, crushed by Dorothy's house"),
-    SOUTH("Good by inference, but missing");
-    private String description;
-    private OzWitch(String description) {
-        this.description = description;
-    }
-    public String getDescription() {
-        return description;
-    }
-    public static void main(String[] args) {
-        for (OzWitch witch : OzWitch.values()) {
-            System.out.println(witch + ": " + witch.getDescription());
-        }
+    public int getNumber() {
+        return number;
     }
 }
 ```
 
-输出为：
+`Enum` 规范中谈及 `ordinal()` 方法是用于 `EnumSet` 和 `EnumMap` 基于枚举的数据结构的。因此，使用时要避免使用 `ordinal()` 方法。
 
-```shell
-WEST: Miss Gulch, aka the Wicked Witch of the West
-NORTH: Glinda, the Good Witch of the North
-EAST: Wicked Witch of the East, wearer of the Ruby Slippers, crushed by Dorothy's house
-SOUTH: Good by inference, but missing
-```
+如果只有常量的名称，就可以使用 `valueOf(String name)` 将常量的名称转换为相应的 `enum` 实例，如果不存在给定的常量名称，将会抛出异常。
 
-在这个例子中，虽然我们将 `enum` 的构造器声明为 `private`，但对于它的访问性而言，其实并没有什么变化，因为（即使不声明为 private）我们只能在 enum 定义的内部使用其构造器创建 enum 实例。一旦 enum 的定义结束，编译器就不允许我们再使用其构造器来创建任何实例了。
+由于 `java.lang.Enum<E extends Enum<E>>` 实现了 `Comparable<E>` 和 `Serializable` 接口，因此支持排序并且可以序列化。而且在 `enum` 实例上调用 `getDeclaringClass()` 方法，可以获取其枚举的实例所属的枚举类。
 
-### 实现接口
+除了不能使用 `extends` 实现继承外，基本上可以将枚举类看作一个常规类，允许添加任意的方法和域，并实现任意的接口。
 
-所有的 `enum` 都继承自 `java.lang.Enum` 类。由于 Java 不支持多重继承，所以你的 `enum` 不能再继承其它类：
+### 方法添加
+
+就像上面的 `Week` 枚举类，可以提供一个用于描述 `Week` 实例的方法来增强枚举类型。
 
 ```java
-enum NotPossible extends Pet { ... // Won't work
-```
-
-然而，在我们创建一个新的 `enum` 时，可以同时实现一个或多个接口：
-
-```java
-enum CartoonCharacter implements Supplier<CartoonCharacter> {
-    SLAPPY, SPANKY, PUNCHY,
-    SILLY, BOUNCY, NUTTY, BOB;
-    private Random rand = new Random(47);
-    @Override
-    public CartoonCharacter get() {
-        return values()[rand.nextInt(values().length)];
+public enum Week {
+    MONDAY("星期一"),TUESDAY("星期二"),WEDNESDAY("星期三"),
+    THURSDAY("星期四"),FIRDAY("星期五"),
+    SATURDAY("星期六"),SUNDAY("星期日");
+    private final String desc;
+    Week(String desc) {
+        this.desc = desc;
     }
-}
-public class EnumImplementation {
-    public static <T> void printNext(Supplier<T> rg) {
-        System.out.print(rg.get() + ", ");
-    }
-
-    public static void main(String[] args) {
-        // Choose any instance;
-        CartoonCharacter cc = CartoonCharacter.BOB;
-        for (int i = 0; i < 10; i++) {
-            printNext(cc);
-        }
+    public String getDesc() {
+        return desc;
     }
 }
 ```
 
-输出为：
+因为枚举的不可变性，声明的实例域都应该为 `final`的，可以将 `private` 设为 `public`，但不建议。这样在编写一个带有数据并将数据保存在域中的构造器将数据与枚举常量关联起来就可以了。
 
-```shell
-BOB, PUNCHY, BOB, SPANKY, NUTTY, PUNCHY, SLAPPY, NUTTY, NUTTY, SLAPPY, 
-```
-
-这个结果有点奇怪，不过你必须要有一个 enum 实例才能调用其上的方法。现在，在任何接受 Supplier 参数的方法中，例如 printNext()，都可以使用 CartoonCharacter。
-
-## 五、EnumSet与EnumMap
-
-### 使用EnumSet替代Flags
-
-`Set`是一种集合，只能向其中添加不重复的对象。当然，`enum`中成员都是唯一的，所以`enum`也具有集合的行为。不过，不能从`enum`中删除或添加元素，所以它没有什么作用。JDK 5引入`EnumSet`，专为枚举设计的集合类，以替代传统的基于 `int` 的 "位标志"。
-
-`EnumSet` 的设计充分考虑到了速度因素，因为它必须与非常高效的 bit 标志相竞争（其操作与 `HashSet` 相比，非常快），就其内部而言，它（可能）就是将一个 `long` 值作为比特向量，所以 `EnumSet` 非常快速高效。使用 `EnumSet` 的优点是，它在说明一个二进制位是否存在时，具有更好的表达能力，并且无需担心性能。
-
-`EnumSet` 中的元素必须来自一个 `enum`，下面的 `enum` 表示在一座大楼中，警告传感器的安放位置：
+使用枚举还可以将不同的行为与每个枚举常量关联起来，如在枚举类型中声明一个抽象方法，并在特定于常量的类主体中，用具体的方法覆盖每个常量的抽象方法。这种方法被称作 **特定于常量的方法实现** 。下面使用枚举来编写一个四则运算：
 
 ```java
-public enum AlarmPoints {
-    STAIR1, STAIR2, LOBBY, OFFICE1, OFFICE2, OFFICE3,
-    OFFICE4, BATHROOM, UTILITY, KITCHEN
-}
-```
-
-然后，我们用 `EnumSet` 来跟踪报警器的状态：
-
-```java
-public class EnumSets {
-    public static void main(String[] args) {
-        // EnumSet.noneOf()创建一个空的Set
-        EnumSet<AlarmPoints> points =
-                EnumSet.noneOf(AlarmPoints.class); // Empty
-        points.add(BATHROOM);
-        System.out.println(points);
-        points.addAll(
-                EnumSet.of(STAIR1, STAIR2, KITCHEN));
-        System.out.println(points);
-        points = EnumSet.allOf(AlarmPoints.class);
-        points.removeAll(
-                EnumSet.of(STAIR1, STAIR2, KITCHEN));
-        System.out.println(points);
-        points.removeAll(
-                EnumSet.range(OFFICE1, OFFICE4));
-        System.out.println(points);
-        points = EnumSet.complementOf(points);
-        System.out.println(points);
-    }
-}
-```
-
-输出为：
-
-```shell
-[BATHROOM]
-[STAIR1, STAIR2, BATHROOM, KITCHEN]
-[LOBBY, OFFICE1, OFFICE2, OFFICE3, OFFICE4, BATHROOM, UTILITY]
-[LOBBY, BATHROOM, UTILITY]
-[STAIR1, STAIR2, OFFICE1, OFFICE2, OFFICE3, OFFICE4, KITCHEN]
-```
-
-`EnumSet`的基础是 `long`，一个 `long` 值有64位，而一个`enum`实例只需要一位bit表示其是否存在。也就是说，在不超过一个 `long` 的表达能力的情况下，你的`EnumSet`可以应用于最多不超过 64 个元素的 `enum`。如果`enum`超过了64个元素会发生什么呢？
-
-```java
-public class BigEnumSet {
-    enum Big { A0, A1, A2, A3, A4, A5, A6, A7, A8, A9,
-        A10, A11, A12, A13, A14, A15, A16, A17, A18, A19,
-        A20, A21, A22, A23, A24, A25, A26, A27, A28, A29,
-        A30, A31, A32, A33, A34, A35, A36, A37, A38, A39,
-        A40, A41, A42, A43, A44, A45, A46, A47, A48, A49,
-        A50, A51, A52, A53, A54, A55, A56, A57, A58, A59,
-        A60, A61, A62, A63, A64, A65, A66, A67, A68, A69,
-        A70, A71, A72, A73, A74, A75 }
-
-    public static void main(String[] args) {
-        EnumSet<Big> bigEnumSet = EnumSet.allOf(Big.class);
-        System.out.println(bigEnumSet);
-    }
-}
-```
-
-输出为：
-
-```shell
-[A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27, A28, A29, A30, A31, A32, A33, A34, A35, A36, A37, A38, A39, A40, A41, A42, A43, A44, A45, A46, A47, A48, A49, A50, A51, A52, A53, A54, A55, A56, A57, A58, A59, A60, A61, A62, A63, A64, A65, A66, A67, A68, A69, A70, A71, A72, A73, A74, A75]
-```
-
-显然，`EnumSet` 可以应用于超过 64 个元素的 `enum`，所以猜测，Enum 会在必要的时候增加一个 long。
-
-### 使用 EnumMap
-
-`EnumMap` 是一种特殊的 `Map`，它要求其中的键（key）必须来自一个 `enum`，由于 `enum` 本身的限制，所以 `EnumMap` 在内部可由数组实现。因此 `EnumMap` 的速度很快，我们可以放心地使用 `enum` 实例在 `EnumMap` 中进行查找操作。不过，我们只能将 `enum` 的实例作为键来调用 `put()` 方法，其它操作与使用与一般的 `Map` 差不多。
-
-下面的例子演示了命令设计模式的用法。一般来说，命令模式首先需要一个只有单一方法的接口，然后从该接口实现具有各自不同的行为的多个子类。接下来，程序员就可以构造命令对象，并在需要的时候使用它们了：
-
-```java
-public class EnumMaps {
-    interface Command {
-        void action();
-    }
-    public static void main(String[] args) {
-        EnumMap<AlarmPoints, Command> em = new EnumMap<>(AlarmPoints.class);
-        em.put(KITCHEN,
-                () -> System.out.println("Kitchen fire!"));
-        em.put(BATHROOM,
-                () -> System.out.println("Bathroom alert!"));
-        for(Map.Entry<AlarmPoints,Command> e:
-                em.entrySet()) {
-            System.out.print(e.getKey() + ": ");
-            e.getValue().action();
-        }
-        try { // If there's no value for a particular key:
-            em.get(UTILITY).action();
-        } catch(Exception e) {
-            System.out.println("Expected: " + e);
-        }
-    }
-}
-```
-
-输出为：
-
-```shell
-BATHROOM: Bathroom alert!
-KITCHEN: Kitchen fire!
-Expected: java.lang.NullPointerException
-```
-
-与 `EnumSet` 一样，`enum` 实例定义时的次序决定了其在 `EnumMap` 中的顺序。
-
-`main()` 方法的最后部分说明，`enum` 的每个实例作为一个键，总是存在的。但是，如果你没有为这个键调用 `put()` 方法来存入相应的值的话，其对应的值就是 `null`。
-
-## 六、枚举的应用
-
-### switch语句中使用枚举
-
-在`switch`中使用`enum`，是`enum`提供的一项非常便利的功能。JDK 7之后，`switch`已经支持 `int`、`char`、`String`、`enum`类型的参数，枚举通过`ordinal()`方法取得次序（编译器帮我们做了类似的工作）。
-
-一般情况下我们必须使用 `enum` 类型来修饰一个 `enum` 实例，但是在 `case` 语句中却不必如此。下面的例子是使用 `enum` 构造了一个小型状态机：
-
-```java
-public class TrafficLight { // 红绿灯
-    enum Signal {GREEN, YELLOW, RED}
-
-    Signal color = Signal.RED;
-    public void change() {
-        switch (color) {
-            // Note you don't have to say Signal.RED
-            // in the case statement:
-            case RED: color = Signal.GREEN;
-                break;
-            case GREEN: color = Signal.YELLOW;
-                break;
-            case YELLOW: color = Signal.RED;
-                break;
-        }
-    }
-    @Override
-    public String toString() {
-        // 输出交通灯颜色
-        return "The traffic light is " + color;
-    }
-
-    public static void main(String[] args) {
-        TrafficLight t = new TrafficLight();
-        for (int i = 0; i < 7; i++) {
-            System.out.println(t);
-            t.change();
-        }
-    }
-}
-```
-
-输出为：
-
-```java
-The traffic light is RED
-The traffic light is GREEN
-The traffic light is YELLOW
-The traffic light is RED
-The traffic light is GREEN
-The traffic light is YELLOW
-The traffic light is RED
-```
-
-编译器并没有报错 `switch` 中没有 `default` 语句，但并不是因为每一个 `Signal` 都有对应的 `case` 语句。如果注释掉其中的某个 `case` 语句，编译器同样不会报错。这意味着，你必须确保覆盖了所有分支。
-
-### 使用接口组织枚举
-
-在一个接口的内部，创建实现该接口的枚举，以此将元素进行分组，可以达到将枚举元素分类组织的目的。举例来说，假设你想用 `enum` 来表示不同类别的食物，同时还希望每个 `enum` 元素仍然保持 `Food` 类型。那可以这样实现：
-
-```java
-public interface Food {
-    enum Appetizer implements Food {
-        SALAD, SOUP, SPRING_ROLLS;
-    }
-    enum MainCourse implements Food {
-        LASAGNE, BURRITO, PAD_THAI,
-        LENTILS, HUMMOUS, VINDALOO;
-    }
-    enum Dessert implements Food {
-        TIRAMISU, GELATO, BLACK_FOREST_CAKE,
-        FRUIT, CREME_CARAMEL;
-    }
-    enum Coffee implements Food {
-        BLACK_COFFEE, DECAF_COFFEE, ESPRESSO,
-        LATTE, CAPPUCCINO, TEA, HERB_TEA;
-    }
-}
-```
-
-对于 enum 而言，实现接口是使其子类化的唯一办法，所以嵌入在 Food 中的每个 enum 都实现了 Food 接口。现在，在下面的程序中，我们可以说“所有东西都是某种类型的 Food"。
-
-```java
-public class TypeOfFood {
-    public static void main(String[] args) {
-        Food food = Food.Appetizer.SALAD;
-        food = Food.MainCourse.LASAGNE;
-        food = Food.Dessert.GELATO;
-        food = Food.Coffee.CAPPUCCINO;
-    }
-}
-```
-
-如果 enum 类型实现了 Food 接口，那么我们就可以将其实例向上转型为 Food，所以上例中的所有东西都是 Food。
-
-然而，当你需要与一大堆类型打交道时，接口就不如 enum 好用了。例如，如果你想创建一个“枚举的枚举”，那么可以创建一个新的 enum，然后用其实例包装 Food 中的每一个 enum 类：
-
-```java
-public enum  Course {
-    APPETIZER(Food.Appetizer.class),
-    MAINCOURSE(Food.MainCourse.class),
-    DESSERT(Food.Dessert.class),
-    COFFEE(Food.Coffee.class);
-    private Food[] values;
-    private Course(Class<? extends Food> kind) {
-        values = kind.getEnumConstants();
-    }
-    public Food randomSelection() {
-        return Enums.random(values);
-    }
-}
-public class Enums {
-    private static Random rand = new Random(47);
-    public static <T extends Enum<T>> T random(Class<T> ec) {
-        return random(ec.getEnumConstants());
-    }
-    public static <T> T random(T[] values) {
-        return values[rand.nextInt(values.length)];
-    }
-}
-```
-
-每一个 Course 的实例都将其对应的 Class 对象作为构造器的参数。通过 getEnumConstants0 方法，可以从该 Class 对象中取得某个 Food 子类的所有 enum 实例。这些实例在 randomSelection() 中被用到。因此，通过从每一个 Course 实例中随机地选择一个 Food，我们便能够生成一份菜单：
-
-```java
-public class Meal {
-    public static void main(String[] args) {
-        for(int i = 0; i < 5; i++) {
-            for(Course course : Course.values()) {
-                Food food = course.randomSelection();
-                System.out.println(food);
-            }
-            System.out.println("***");
-        }
-    }
-}
-```
-
-输出为：
-
-```shell
-SPRING_ROLLS
-VINDALOO
-FRUIT
-DECAF_COFFEE
-***
-SOUP
-VINDALOO
-FRUIT
-TEA
-***
-SALAD
-BURRITO
-FRUIT
-TEA
-***
-SALAD
-BURRITO
-CREME_CARAMEL
-LATTE
-***
-SOUP
-BURRITO
-TIRAMISU
-ESPRESSO
-***
-```
-
-在这个例子中，我们通过遍历每一个 `Course` 实例来获得 "枚举的枚举" 的值。
-
-此外，还有一种更简洁的管理枚举的办法，就是将一个 `enum` 嵌套在另一个 `enum` 内，例如：
-
-```java
-public enum SecurityCategory {
-    STOCK(Security.Stock.class),
-    BOND(Security.Bond.class);
-    Security[] values;
-    SecurityCategory(Class<? extends Security> kind) {
-        values = kind.getEnumConstants();
-    }
-
-    interface Security {
-        enum Stock implements Security {
-            SHORT, LONG, MARGIN
-        }
-        enum Bond implements Security {
-            MUNICIPAL, JUNK
-        }
-    }
-    public Security randomSelection() {
-        return Enums.random(values);
-    }
-
-    public static void main(String[] args) {
-        for (int i = 0; i < 10; i++) {
-            SecurityCategory category = Enums.random(SecurityCategory.class);
-            System.out.println(category + ": " +
-                    category.randomSelection());
-        }
-    }
-}
-```
-
-输出为：
-
-```shell
-BOND: MUNICIPAL
-BOND: MUNICIPAL
-STOCK: MARGIN
-STOCK: MARGIN
-BOND: JUNK
-STOCK: SHORT
-STOCK: LONG
-STOCK: LONG
-BOND: MUNICIPAL
-BOND: JUNK
-```
-
-`Security` 接口的作用是将其所包含的 `enum` 组合成一个公共类型，这一点是有必要的。然后，`SecurityCategory` 才能将 `Security` 中的 `enum` 作为其构造器的参数使用，以起到组织的效果。
-
-如果我们将这种方式应用于 `Food` 的例子，结果应该这样：
-
-```java
-public enum Meal2 {
-    APPETIZER(Food.Appetizer.class),
-    MAINCOURSE(Food.MainCourse.class),
-    DESSERT(Food.Dessert.class),
-    COFFEE(Food.Coffee.class);
-    private Food[] values;
-    private Meal2(Class<? extends Food> kind) {
-        values = kind.getEnumConstants();
-    }
-    public interface Food {
-        enum Appetizer implements Food {
-            SALAD, SOUP, SPRING_ROLLS;
-        }
-        enum MainCourse implements Food {
-            LASAGNE, BURRITO, PAD_THAI,
-            LENTILS, HUMMOUS, VINDALOO;
-        }
-        enum Dessert implements Food {
-            TIRAMISU, GELATO, BLACK_FOREST_CAKE,
-            FRUIT, CREME_CARAMEL;
-        }
-        enum Coffee implements Food {
-            BLACK_COFFEE, DECAF_COFFEE, ESPRESSO,
-            LATTE, CAPPUCCINO, TEA, HERB_TEA;
-        }
-    }
-    public Food randomSelection() {
-        return Enums.random(values);
-    }
-    public static void main(String[] args) {
-        for(int i = 0; i < 5; i++) {
-            for(Meal2 meal : Meal2.values()) {
-                Food food = meal.randomSelection();
-                System.out.println(food);
-            }
-            System.out.println("***");
-        }
-    }
-}
-```
-
-输出为：
-
-```shell
-SPRING_ROLLS
-VINDALOO
-FRUIT
-DECAF_COFFEE
-***
-SOUP
-VINDALOO
-FRUIT
-TEA
-***
-SALAD
-BURRITO
-FRUIT
-TEA
-***
-SALAD
-BURRITO
-CREME_CARAMEL
-LATTE
-***
-SOUP
-BURRITO
-TIRAMISU
-ESPRESSO
-***
-```
-
-其实，这仅仅是重新组织了一下代码，不过多数情况下，这种方式使你的代码具有更清晰的结构。
-
-### 策略枚举
-
-EffectiveJava中展示了一种策略枚举。这种枚举通过枚举嵌套枚举的方式，将枚举常量分类处理。
-
-这种做法虽然没有switch语句简洁，但是更加安全、灵活。
-
-```java
-public enum PayrollDay {
-    MONDAY(PayType.WEEKDAY), TUESDAY(PayType.WEEKDAY), WEDNESDAY(
-            PayType.WEEKDAY), THURSDAY(PayType.WEEKDAY), FRIDAY(PayType.WEEKDAY), SATURDAY(
-            PayType.WEEKEND), SUNDAY(PayType.WEEKEND);
-
-    private final PayType payType;
-
-    PayrollDay(PayType payType) {
-        this.payType = payType;
-    }
-
-    double pay(double hoursWorked, double payRate) {
-        return payType.pay(hoursWorked, payRate);
-    }
-
-    // 策略枚举
-    private enum PayType {
-        WEEKDAY {
-            double overtimePay(double hours, double payRate) {
-                return hours <= HOURS_PER_SHIFT ? 0 : (hours - HOURS_PER_SHIFT)
-                        * payRate / 2;
-            }
-        },
-        WEEKEND {
-            double overtimePay(double hours, double payRate) {
-                return hours * payRate / 2;
-            }
-        };
-        private static final int HOURS_PER_SHIFT = 8;
-
-        abstract double overtimePay(double hrs, double payRate);
-
-        double pay(double hoursWorked, double payRate) {
-            double basePay = hoursWorked * payRate;
-            return basePay + overtimePay(hoursWorked, payRate);
-        }
-    }
-
-    public static void main(String[] args) {
-        System.out.println("时薪100的人在周五工作8小时的收入：" + PayrollDay.FRIDAY.pay(8.0, 100));
-        System.out.println("时薪100的人在周六工作8小时的收入：" + PayrollDay.SATURDAY.pay(8.0, 100));
-    }
-}
-```
-
-输出为：
-
-```shell
-时薪100的人在周五工作8小时的收入：800.0
-时薪100的人在周六工作8小时的收入：1200.0
-```
-
-### 常量特定方法
-
-Java中允许为 `enum` 的实例允许编写方法，从而为每个 `enum` 实例赋予各自不同的行为。要实现常量相关的方法，你需要为 `enum` 定义一个或多个 `abstract` 方法，然后为每个 `enum` 实例实现该抽象方法。例如：
-
-```java
-public enum ConstantSpecificMethod {
-    DATE_TIME {
+public enum Operation {
+    PLUS("+") {
         @Override
-        String getInfo() {
-            return DateFormat.getDateInstance().format(new Date());
+        public double apply(double x, double y) {
+            return x + y;
         }
     },
-    CLASSPATH {
+    MINUS("-") {
         @Override
-        String getInfo() {
-            return System.getenv("CLASSPATH");
+        public double apply(double x, double y) {
+            return x - y;
         }
     },
-    VERSION {
+    TIMES("*") {
         @Override
-        String getInfo() {
-            return System.getProperty("java.version");
+        public double apply(double x, double y) {
+            return x * y;
+        }
+    },
+    DIVIDE("/") {
+        @Override
+        public double apply(double x, double y) {
+            return x / y;
         }
     };
-    abstract String getInfo();
-    public static void main(String[] args) {
-        for (ConstantSpecificMethod csm : values()) {
-            System.out.println(csm.getInfo());
-        }
-    }
-}
-```
-
-输出为：
-
-```shell
-2020年3月29日
-null
-11
-```
-
-通过相应的 `enum` 实例，我们可以调用其上的方法。这通常也称为表驱动的代码（table-driven code）。
-
-在面向对象的程序设计中，不同的行为与不同的类关联。而通过常量相关的方法，每个 `enum` 实例可以具备自己独特的行为，这似乎说明每个 `enum` 实例就像一个独特的类。在上面的例子中，`enum` 实例似乎被当作其“超类” `ConstantSpecificMethod` 来使用，在调用 `getInfo()` 方法时，体现出多态的行为。
-
-再看一个更有趣的关于洗车的例子。每个顾客在洗车时，都有一个选择菜单，每个选择对应一个不同的动作。可以将一个常量相关的方法关联到一个选择上，再使用一个 `EnumSet` 来保存客户的选择：
-
-```java
-public class CarWash {
-    public enum Cycle {
-        UNDERBODY { // 底部
-            @Override
-            void action() { // 喷涂底部
-                System.out.println("Spraying the underbody");
-            }
-        },
-        WHEELWASH { // 轴距
-            @Override
-            void action() { // 清洗车轮
-                System.out.println("Washing the wheels");
-            }
-        },
-        PREWASH {   // 预洗
-            @Override
-            void action() { // 污渍
-                System.out.println("Loosening the dirt");
-            }
-        },
-        BASIC { // 基本
-            @Override
-            void action() { // 最基本的清洗
-                System.out.println("The basic wash");
-            }
-        },
-        HOTWAX {    // 热蜡
-            @Override
-            void action() { // 应用热蜡
-                System.out.println("Applying hot wax");
-            }
-        },
-        RINSE { //漂洗
-            @Override
-            void action() { // 冲刷
-                System.out.println("Rinsing");
-            }
-        },
-        BLOWDRY {   // 吹干
-            @Override
-            void action() { // 吹干
-                System.out.println("Blowing dry");
-            }
-        };
-        abstract void action();
-    }
-    EnumSet<Cycle> cycles =
-            EnumSet.of(Cycle.BASIC, Cycle.RINSE);
-    public void add(Cycle cycle) {
-        cycles.add(cycle);
-    }
-    public void washCar() {
-        for(Cycle c : cycles)
-            c.action();
-    }
+    private final  String symbol;
+    Operation(String symbol) { this.symbol = symbol; }
     @Override
-    public String toString() {
-        return cycles.toString();
-    }
-    public static void main(String[] args) {
-        CarWash wash = new CarWash();
-        System.out.println(wash);
-        wash.washCar();
-// Order of addition is unimportant:
-        wash.add(Cycle.BLOWDRY);
-        wash.add(Cycle.BLOWDRY); // Duplicates ignored
-        wash.add(Cycle.RINSE);
-        wash.add(Cycle.HOTWAX);
-        System.out.println(wash);
-        wash.washCar();
-    }
+    public String toString() { return symbol; }
+    public abstract double apply(double x, double y);
 }
 ```
 
-输出为：
-
-```shell
-[BASIC, RINSE]
-The basic wash
-Rinsing
-[BASIC, HOTWAX, RINSE, BLOWDRY]
-The basic wash
-Applying hot wax
-Rinsing
-Blowing dry
-```
-
-与使用匿名内部类相比，定义常量相关方法的语法更高效，简洁。
-
-除了实现 `abstract` 方法以外，也可以覆盖实现的常量相关的方法，例如：
+通过这种方式可以消除烦人的 `if/else` 与 `switch` 语句。下面给出一个使用 `switch` 方法来实现的四则运算：
 
 ```java
-public enum  OverrideConstantSpecific {
-    NUT, BOLT,
-    WASHER {
-        @Override
-        void f() {
-            System.out.println("Overridden method");
+public enum Operation {
+    PLUS,MINUS,TIMES("*"),DIVIDE("/");
+    private final  String symbol;
+    Operation(String symbol) { this.symbol = symbol; }
+    @Override
+    public String toString() { return symbol; }
+    public double apply(double x, double y) {
+        switch (this) {
+            case PLUS: return x + y;
+            case MINUS: return x - y;
+            case TIMES: return x * y;
+            case DIVIDE: return x / y;
         }
+        throw new AssertionError("Unknown op:" + this);
     };
-    void f() {
-        System.out.println("default behavior");
-    }
-    public static void main(String[] args) {
-        for(OverrideConstantSpecific ocs : values()) {
-            System.out.print(ocs + ": ");
-            ocs.f();
-        }
-    }
 }
 ```
 
-输出为：
+与上面实现的方式相比，使用 `if/else` 或 `switch` 的判断方式要繁琐的多。
 
-```shell
-NUT: default behavior
-BOLT: default behavior
-WASHER: Overridden method
+###  接口实现
+
+因为创建的枚举类都会继承自 `java.lang.Enum<E extends Enum<E>>`，在 Java 单继承体系中就不能在继承其它的类了，但是可以实现任意的接口。如上面在枚举类中抽象方法移到接口中：
+
+```java
+public enum Operation implements BiFunction<Double, Double, Double> {
+    PLUS("+") {
+        @Override
+        public Double apply(Double x, Double y) {
+            return x + y;
+        }
+    },
+    MINUS("-") {
+        @Override
+        public Double apply(Double x, Double y) {
+            return x - y;
+        }
+    },
+    TIMES("*") {
+        @Override
+        public Double apply(Double x, Double y) {
+            return x * y;
+        }
+    },
+    DIVIDE("/") {
+        @Override
+        public Double apply(Double x, Double y) {
+            return x / y;
+        }
+    };
+    private final  String symbol;
+    Operation(String symbol) { this.symbol = symbol; }
+    @Override
+    public String toString() { return symbol; }
+}
 ```
+
+因为接口是可扩展的，就可以定义另一个实现该接口的枚举类，并用这个新类型的实例代替 `Operation` 类型。如下所示：
+
+```java
+public enum ExtendedOperation implements BiFunction<Double, Double, Double> {
+    EXP("^") {
+        @Override
+        public Double apply(Double x, Double y) {
+            return Math.pow(x, y);
+        }
+    },
+    REMAINDER("%") {
+        @Override
+        public Double apply(Double x, Double y) {
+            return x % y;
+        }
+    };
+    private final String symbol;
+    ExtendedOperation(String symbol) { this.symbol = symbol; }
+
+    public String getSymbol() { return symbol; }
+
+    @Override
+    public String toString() { return symbol; }
+}
+```
+
+如此，无法编写可扩展的枚举类型，可以通过实现接口来实现扩展。
+
+## 集合
+
+java 中有专门为枚举提供的 `EnumSet` 和 `EnumMap` 数据结构。下面简单介绍一下它们。
+
+### EnumSet
+
+`EnumSet` 类是 `Set` 集合的子类，用于添加不重复的值。在应用于枚举类时，有效地表示从单个枚举类型中提取的多个值的多个集合。如上面的 `Week` 枚举，当用户传入一个值，我们需要判断是否是 `EnumSet` 中的值：
+
+```java
+EnumSet<Week> weeks = EnumSet.of(Week.MONDAY, Week.TUESDAY, Week.WEDNESDAY,Week.THURSDAY, Week.FIRDAY);
+boolean isWork = weeks.contains(Week.SATURDAY);
+```
+
+这里设置的 `weeks` 中是工作的时间，只有每周六、日放假，使用 `weeks.contains()` 判断是否是工作日。
+
+### EnumMap
+
+`EnumMap` 是专门为映射枚举而开发的 `Map` 映射表，它要求键必须是 `Enum` 类型，我们可以将上面为`Week` 添加了一个描述的方法修改为 `EnumMap` 映射表的形式：
+
+```java
+EnumMap<Week, String> map = new EnumMap<Week, String>(Week.class);
+map.put(Week.MONDAY, "星期一");
+map.put(Week.TUESDAY, "星期二");
+map.put(Week.WEDNESDAY, "星期三");
+map.put(Week.THURSDAY, "星期四");
+map.put(Week.FIRDAY, "星期五");
+map.put(Week.SATURDAY, "星期六");
+map.put(Week.SUNDAY, "星期日");
+```
+
+这样，我们可以通过 `EnumMap` 提供的 API 快速查找 `Week` 枚举对应的值。
+
+## 总结
+
+因此，当使用一组固定的常量表示合法值，就可以使用枚举类型来表示，且通过 `EnumSet` 和 `EnumMap` 和 `Enum` 自带的方法，可以很方便的操作枚举类型，而且封装性良好。因此，在项目中遇到有限常量的情况下，可以试着使用枚举。
