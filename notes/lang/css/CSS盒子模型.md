@@ -6,7 +6,7 @@
 
 盒模型又称框模型（Box Model），由内容`content`、内边距`padding`、边框`border`和外边距`margin`四部分组成。
 
-![](./images/盒模型.png)
+![](./images/1-1 盒模型.png)
 
 标准模型元素宽度`width=content-width`，高度`height=content-height`。
 
@@ -209,7 +209,7 @@ div img {
 </div>
 ```
 
-![](./images/box-sizing.png)
+![](./images/1-2 box-sizing.png)
 
 上面显示的结果就是不同`box-sizing`值改变相同元素的渲染结果。
 
@@ -276,11 +276,11 @@ div {
 </div>
 ```
 
-![](./images/overflow-1.png)
+![](./images/1-3 overflow-1.png)
 
 当将 `overflow`换成`scroll`后的效果如下：
 
-![](./images/overflow-2.png)
+![](./images/1-4 overflow-2.png)
 
 
 
@@ -300,7 +300,7 @@ div {
 }
 ```
 
-![](./images/resize.png)
+![](./images/1-5 resize.png)
 
 拖动右下角就可以将元素大小进行改变。
 
@@ -329,7 +329,7 @@ div {
 }
 ```
 
-![](./images/outline-1.png)
+![](./images/1-6 outline-1.png)
 
 `outline`属性语法如下：
 
