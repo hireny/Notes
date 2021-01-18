@@ -33,7 +33,7 @@ let xhr = new ActiveXObject("Microsoft.XMLHTTP");
 
 - type：表示请求类型，如 `"get"` 、`"post"` 等。
 - url：表示请求的url。
-- async：表示请求是否异步。如 `true`表示异步请求，`false`表示同步请求，它会使JavaScript代码等待服务器响应之后在继续执行。
+- async：表示请求是否异步。如 `true`表示异步请求，`false`表示同步请求，它会使JavaScript代码等待服务器响应之后再继续执行。
 
 ## 请求
 
@@ -45,7 +45,7 @@ open(method, url, async, username, password): void;
 
 - `method`：字符串，表示要传入的HTTP方法，如`/GET/POST/PUT/DELETE`等。
 - `url`：字符串，表示请求发送目标URL。
-- `async`：布尔值，表示请求是否为异步，默认为`true`。如果值为`false`，`send()`方法只有等待收到服务器返回结果，才会进行下一步操作。参数可选。如果 `multipart` 属性为 `true` 则这个必须为 `true`，否则将引发异常。注意，主线程上的同步请求很容易破坏用户体验，应避免；实际上，许多浏览器以完全启用主线程上的同步`XMLHttpRequest`支持。在`Worker`中允许同步请求。
+- `async`：布尔值，表示请求是否为异步，默认为`true`。如果值为`false`，`send()`方法只有等待收到服务器返回结果，才会进行下一步操作。参数可选。如果 `multipart` 属性为 `true` 则这个必须为 `true`，否则将引发异常。注意，主线程上的同步请求很容易破坏用户体验，应避免；实际上，许多浏览器已完全启用主线程上的同步`XMLHttpRequest`支持。在`Worker`中允许同步请求。
 - `username`：字符串，表示用户名用于认证用途，默认为`null`。参数可选。
 - `password`：字符串，表示密码用于认证用途，默认为`null`。参数可选。
 
@@ -225,7 +225,7 @@ setTimeout(function() {
 - `Accept-Language`：浏览器使用的语言。
 - `Connection`：浏览器与服务器的连接类型。
 - `Cookie`：页面中设置的 `Cookie`。
-- `Host`：发送请求的页面所在的域。
+- `Host`：发送请求的页面所在地域。
 - `Referer`：发送请求的页面的 `URI`。
 - `User-Agent`：浏览器的用户代理字符串。
 
@@ -505,8 +505,10 @@ xhr.overrideMimeType("text/xml");
 xhr.send(null);
 ```
 
-注意：为正确覆盖响应的 `MIME` 类型，该方法必须在 `send()` 方法之前调用。
+注意：为了正确覆盖响应的 `MIME` 类型，该方法必须在 `send()` 方法之前调用。
 
 # 小结
 
 Ajax 是无需刷新当前页面即可从服务器获取数据的一种方法，其中核心对象是 `XMLHttpRequest`，最早由微软发明，并在 IE5 中引入。之后，其它浏览器都实现了该对象。W3C 虽然也引入了 Web 标准。虽然不同浏览器有些差异，但基本使用是相对较规范的，因此可以放心使用。
+
+> 文章首发于微信公众号「海人的博客」
