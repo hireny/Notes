@@ -163,7 +163,7 @@ public final class LocalDateTime
         implements Temporal, TemporalAdjuster, ChronoLocalDateTime<LocalDate>, Serializable
 ```
 
-就知道 `LocalDateTime` 与上两个表示日期与时间的类都是被 `final` 修饰的不可变的时间对象。它同时表示日期和时间，但不带有时区信息，你可以通过 `now()` 与指定时区、时钟来创建当前日期时间：
+就知道 `LocalDateTime` 以上两个表示日期与时间的类都是被 `final` 修饰的不可变的时间对象。它同时表示日期和时间，但不带有时区信息，你可以通过 `now()` 与指定时区、时钟来创建当前日期时间：
 
 ```java
 public static void main(String[] args) {
@@ -667,7 +667,7 @@ public static void main(String[] args) {
 ZoneId romeZone = ZoneId.of("Asia/Shanghai");
 ```
 
-也可以通过Java8在 `TimeZone` 中新加入的方法 `toZoneId` 来将老的时区对象转换为 `ZoneId`：
+也可以通过Java8在 `TimeZone` 重新加入的方法 `toZoneId` 来将老的时区对象转换为 `ZoneId`：
 
 ```java
 ZoneId zoneId = TimeZone.getDefault().toZoneId();
@@ -761,7 +761,7 @@ System.out.println(offsetTime);
  */
 ```
 
-学习完时区后，我们在返回去看 Date-Time API，可以理解它们之间的关系：
+学习完时区后，我们再返回去看 Date-Time API，可以理解它们之间的关系：
 
 ![关系图](./images/Date-Time API 关系图.png)
 
