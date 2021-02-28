@@ -1,485 +1,289 @@
-- 使用注解
-  - 注解简介  373
-  - 一个示例：注解事件处理器 374
-- 注解语法 379
-  - 注解接口 379
-  - 注解  380
-  - 注解各类声明 382
-  - 注解类型用法 383
-  - 注解 this 384
-- 标准注解 385
-  - 用于编译的注解 386
-  - 用于管理资源的注解 386
-  - 元注解 387 
-- 源码级注解处理 389
-  - 注解处理 389
-  - 语言模型API 390
-  - 使用注解来生成源码 390
+Java SE 5 引入了许多的语言变化，注解（元数据）就是其中之一，主要是在代码中附加补充信息。注解不会影响代码的逻辑，只是在编译、运行时，为代码加入配置与描述等功能。
 
-主机是那些插入到源代码中使用其他工具可以对其进行处理的标签。这些工具可以在源码层次上进行操作，或者可以处理编译器在其中放置了注解的类文件。
-
-主机不会改变程序的编译方式。Java 编译器对于包含主机和不包含注解的代码会生成相同的虚拟机指令。
-
-为了能够受益于注解，你需要选择一个处理工具，然后向你的处理工具可以理解的代码中插入注解，之后运用该处理工具处理代码。
-
-注解的使用范围还是很广泛的，并且这种广泛性让人乍一看会觉得有些杂乱无章。下面是关于注解的一些可能的用法：
-
-- 附属文件的自动生成，例如部署描述符或者 bean 信息类。
-- 测试、日志、事务语义等代码的自动生成。
+注解使用 `@interface` 来定义注解。如下所示：
 
 ```java
-public class MyClass {
+@interface Mapping {
+    String name();
+    String[] path() default {};
+    Type type() default Type.GET;
+}
+```
+
+注解不能包含 `extends` 子句。但是，所有的注解类型都隐式地直接扩展自 `java.lang.annotation.Annotation` 接口。
+
+当 `Mapping` 注解中只需要一个注解元素时，可以将名称设成 `value`，这样指定值时就不需要指定注解元素的名称了。如 `@Mapping("get")`。
+
+注解中可以设置注解元素，看起来就像接口的方法，但是可以为其指定默认值。如 `String[] path() default {}`。注解中的元素类型可以使用基本类型、`String`、`Class`、`enum`、注解类型以及前面所述类型组成的数组。而且可以使用 `default` 为注解元素提供默认值。如上所示的 `String[] path() default {}` 就是设置了默认值的注解元素。
+
+## 注解声明
+
+定义完的注解需要在代码中使用，声明注解可以出现在包、类、接口、方法、构造器、实例域、局部变量、参数变量以及参数类型上。下面给出一个例子：
+
+```java
+@Mapping("example") public class Sample {
     ...
-    @Test
-    public void checkRandomInsertion()
 }
 ```
 
-注解 @Test 用于注解 checkRandomInsertions 方法。
+注意：对局部变量的注解只能在源码级别上进行处理。类文件并不描述局部变量。因此，所有的局部变量注解在编译完一个类的时候就会被遗弃掉。同样地，对包的注解不能在源码级别之外存在。
 
-在 Java 中，注解是当作一个修饰符来使用的，它被置于被注解项之前，中间没有分号。每一个注解的名称前面都加上了 @ 符号，这有点类似于 Javadoc 的注释。然而，Javadoc 注释出现在 /***/ 定界符的内部，而注解是代码的一部分。
+## 内置注解
 
-@Test 注解自身并不会做任何事情，它需要工具支持才会有用。例如，当测试一个类的时候，JUnit4测试工具可能会调用所有标识为 @Test 的方法。另一个工具可能会删除一个类文件中的所有测试方法，以便在对这个类测试完毕后，不会将这些测试方法与程序装载在一起。
+Java SE 提供了许多注解，但其中大部分是专用注解。其中有规则注解和元注解。
 
-注解可以定义成包含元素的形式，例如：
+- `@Deprecated`    该注解用于标记不想被使用的项上。当使用 `@Deprecated` 标记时，编译器就会发出警告。这个注解与 `Javadoc` 标签 `@Deprecated` 具有同等功效。
+- `@SuppressWarnings`    该注解会告知编译器阻止特定类型的警告信息。如 `@SuppressWarnings("unchecked")`。
+- `@Override`    该注解只能应用于方法上， 表示当前的方法定义将覆盖基类的方法。假如你的类中重写 `equals(Object obj)` 方法时，就可以使用 `@Override` 注解标记。不是被覆盖的方法就不要用 `@Override`，那样编译器会报错。
+- `@SafeVarargs`    该注解用于对具有泛型 `varargs` 参数可安全使用。作用于方法或构造器上。该注解为 Java SE 7 新增注解。
+- `@FunctionalInterface`   该注解用于标记只有一个抽象方法的接口，声明为函数式接口。该注解为 Java SE 8 新增注解。
 
-@Test(timeout="10000")
+其中，不包含注解元素的特殊类型的注解被称为标记注解，它唯一的目的就是标记声明。确定标记注解是否存在的最好方式是使用 `isAnnotationPresent()` 方法，该方法是由 `AnnotatedElement` 接口定义的。
 
-这些元素可以被读取这些注解的工具去处理。其他形式的元素也是由可能的；
+### 元注解
 
-除了方法外，还可以注解类、成员以及局部变量，这些注解可以存在于任何可以设置一个像 public 或者 static 这样的修饰符的地方。另外，你还可以注解包、参数变量、类型参数和类型用法。
+还有一些注解用以描述注解接口的行为属性，这种注解称为元注解（meta annotation）。Java 以提供了一些元注解。如下所示：
 
-每个注解都必须通过一个注解接口进行定义。这些接口中的方法与注解中的元素相对应。例如，JUnit 的注解 Test 可以用下面这个接口进行定义：
+#### @Retention
 
-@Target(ElementType.METHOD)
+`@Retention` 定义注解的保留策略，用以决定注解在什么位置被丢弃。而保留策略被封装在 `java.lang.annotation.RetentionPolicy` 枚举中。如下所示：
 
-@Retention(RetentionPolicy.RUNTIME)
+- `RetentionPolicy.SOURCE`    只在源文件中保留，在编译期间会被抛弃。
+- `RetentionPolicy.CLASS`    在编译期间被存储到 `.class` 文件中。但是会在运行时通过 JVM 不能得到这些注解。
+- `RetentionPolicy.RUNTIME`    在编译期间被存储到 `.class` 文件中，并且在运行时可以通过 JVM 获取这些注解。因此，可以通过反射机制读取注解的信息。
 
-public @interface Test {
-
-​    long timeout() default 0L;
-
-}
-
-@interface 声明创建了一个真正的 Java 接口。处理注解的工具将接收那些实现了这个注解接口的对象。这类工具可以调用 timeout 方法来检索某个特定 Test 注解的 timeout 元素。
-
-注解 Target 和 Retention 是元注解。它们注解了 Test 注解，即将 Test 注解标识成一个只能运用到方法上的注解，并且当类文件载入到虚拟机的时候，仍可以保留下来。
-
-## 注解语法
-
-了解注解语法
-
-### 注解接口
-
-注解是由注解接口来定义的：
-
-```java
-modifiers @interface AnnotationName {
-    elementDeclaration1
-    elementDeclaration2
-}
-```
-
-每个元素声明都具有下面这种形式：
-
-```java
-type elementName();
-```
-
-或者
-
-```java
-type elementName() default value;
-```
-
---缓存--
-
-Java 注解是 Java SE 5.0 版本开始支持加入源代码的特殊语法元数据。
-
-Java语言中的类、方法、变量、参数和包等都可以被标注。和 Javadoc 不同，Java标注可以通过反射获取标注内容。在编译器生成类文件时，标注可以被嵌入到字节码中，Java虚拟机可以保留标注内容，在运行时可以获取到标注内容。当然它也支持自定义Java标注。
-
-从 JDK 1.5 开始，Java开始支持注解。AnnotationProcessing tool 提供了一个补充性的编译时注解操作的接口。文档 JSR-269 将它规范化，在 JDK 1.6 写入编译器 javac 中。
-
-Java 定义了一套注解，共有 7 个，3 个在 java.lang 中，剩下 4 个在 java.lang.annotation 中。
-
-作用在代码的注解是：
-
-- @Override - 检查该方法是否是重写方法。如果发现其父类，或者是引用的接口中并没有该方法时，会报编译错误。
-- @Deprecated - 标记过时方法。如果使用该方法，会报编译警告。
-- @SuppressWarnings - 指示编译器去忽略注解中声明的警告。
-
-作用在其他注解的注解（或者是元注解）是：
-
-- @Retention - 表示这个注解怎么保存，是只在代码中，还是编入 class 文件中，或者是在运行时可以通过反射访问。
-- @Documented - 标记这些注解是否包含在用户文档中。
-- @Target - 标记这个注解应该是哪种 Java 成员。
-- @Inherited - 标记这个注解是继承于哪个注解类（默认 注解并没有继承于任何子类）
-
-从 Java 7 开始，额外添加 3 个注解：
-
-- @SafeVarargs - Java 7 开始支持，忽略任何使用参数为泛型变量的方法或构造函数调用产生的警告。
-- @FunctionInterface - Java 8 开始支持，标识一个匿名函数或函数式接口。
-- @Repeatable - Java 8 开始支持，标识某注解可以在同一个声明上使用多次。
-
-# 注解
-
-- 基本语法
-- 元注解
-- 内置注解
-- 注解处理
-
-
-注解（也被称为元数据）是 Java 5 引入的语言变化之一，它是附加在代码中的一些元信息，用于一些工具在编译、运行时进行解析和使用，起到说明、配置的功能。
-
-注解可以被用在包、类、方法、变量和参数上，注解不会影响到代码的逻辑，只起到辅助的作用。
-
-注解的语言十分简单，主要是在现有语法中添加 @ 符号。
-
-## 基本语法
-
-### 定义注解
-
-Java语言使用 `@interface` 语法来定义注解（`Annotation`），它的格式如下：
-
-```java
-@Target(ElementType.METHOD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Test {
-}
-```
-
-注解的定义也需要一些元注解（meta-annotation），比如 `@Target` 和 `@Retention`。`@Target` 定义你的注解应用的位置（方法还是字段）。`Retention` 定义注解的生命周期，在源代码中（SOURCE）、class文件（CLASS）中或者是在运行时（RUNTIME）。
-
-不包含任何元素的注解称为标记注解（marker annotation），例如 `@Test`。
-
-注解通常会包含一些表示特定值的元素。当分析处理注解的时候，程序或工具可以利用这些值。注解的元素看起来就像接口的方法，但是可以为其指定默认值。
-
-下面是一个简单的注解，我们可以用它来追踪项目中的用例。程序员可以使用该注解来标注满足特定用例的一个方法或者一组方法。于是，项目经理可以通过统计已经实现的用例来掌控项目的进展，而开发者在维护项目时可以轻松的找到用例用于更新，或者他们可以调试系统中业务逻辑。
-
-```java
-@Target(ElementType.METHOD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface UseCase {
-    int id();
-    String description() default "no description";
-}
-```
-
-注意 id 和 description 与方法定义类似。由于编译器会对 id 进行类型检查，因此将跟踪数据库与用例文档和源代码相关联是可靠的方式。description 元素拥有一个 default 值，如果在注解某个方法时没有给出 description 的值。则该注解的处理器会使用此元素的默认值。
-
-在下面的类中，有三个方法被注解为用例：
-
-```java
-public class PasswordUtils {
-    @UseCase(id = 47, description =
-            "Passwords must contain at least one numeric")
-    public boolean validatePassword(String passwd) {
-        return (passwd.matches("\\w*\\d\\w*"));
-    }
-    @UseCase(id = 48)
-    public String encryptPassword(String passwd) {
-        return new StringBuilder(passwd)
-                .reverse().toString();
-    }
-    @UseCase(id = 49, description =
-            "New passwords can't equal previously used ones")
-    public boolean checkForNewPassword(
-            List<String> prevPasswords, String passwd) {
-        return !prevPasswords.contains(passwd);
-    }
-}
-```
-
-注解的元素在使用时表现为 名-值 对的形式，并且需要放置在 `@UseCase` 声明之后的括号内。在 `encryptPassword()` 方法的注解中，并没有给出 `description` 的默认值，所以在 `@interface UseCase` 的注解处理器分析处理这个类的时候会使用该元素的默认值。
-
-你应该能够想象到如何使用这套工具来“勾勒”出将要建造的系统，然后在建造的过程中逐渐实现系统的各项功能。
-
-### 使用注解
-
-下面的例子中，使用 `@Test` 对 `testExecute()` 进行注解。该注解本身不做任何事情。但是编译器要保证其类路径上有 `@Test` 注解的定义。
-
-```java
-public class Testable {
-    public void execute() {
-        System.out.println("Executing...");
-    }
-    @Test
-    void testExecute() {
-        execute();
-    }
-}
-```
-
-被注解标注的方法和其它方法没有任何区别。在这个例子中，注解 `@Test` 可以和任何修饰符共同用于方法，诸如 `public`、`static` 或 `void`。从语法的角度上看，注解的使用方式和修饰符的使用方式一致。
-
-## 元注解
-
-有一些注解可以修饰其它注解，这些注解就称为元注解（meta annotation）。Java标准库已经定义了一些元注解，我们只需要使用元注解，通常不需要自己去编写元注解。
-
-**@Target**
-
-使用`@Target`可以定义`Annotation`能够被应用于源码的哪些位置：
-
-- `ElementType.CONSTRUCTOR`：构造器的声明
-- `ElementTyoe.FIELD`：字段声明（包括`enum`实例）
-- `ElementType.LOCAL_VARIABLE`：局部变量声明
-- `ElementType.METHOD`：方法声明
-- `ElementType.PACKAGE`：包声明
-- `ElementType.PARAMETER`：参数声明
-- `ElementType.TYPE`：类、接口（包括注解类型）或者`enum`声明
-
-例如，定义注解`@Report`可用在方法上，我们必须添加一个`@Target(ElementType.METHOD)`：
-
-```java
-@Target(ElementType.METHOD)
-public @interface Report {
-	int type() default 0;
-	String level() default "info";
-	String value() default "";
-}
-```
-
-定义注解`@Report`可用在方法上或字段上，可以把`@Target`注解参数变为数组`{ElementType.METHOD, ElementType.FIELD}`：
-
-```java
-@Target({
-	ElementType.METHOD,
-	ElementType.FIELD
-})
-public @interface Report {...}
-```
-
-实际上`@Target`定义的`value`是`ElementType[]`数组，只有一个元素时，可以省略数组的写法。
-
-**@Retention**
-
-使用元注解`@Retention`定义了`Annotation`的生命周期：
-
-- `RetentionPolicy.SOURCE`：注解将被编译器丢弃（仅编译期间可用）
-- `RetentionPolicy.CLASS`：注解在 class 文件中可用，但是会被 VM 丢弃
-- `RetentionPolicy.RUNTIME`：VM将在运行期也保留注解，因此可以通过反射机制读取注解的信息。
+注意：局部变量声明的注解不能存储在 `.class` 文件中。
 
 如果`@Retention`不存在，则该`Annotation`默认为`CLASS`。因为通常我们自定义的`Annotation`都是`RUNTIME`，所以，务必要加上`@Retention(RetentionPolicy.RUNTIME)`这个元注解：
 
 ```java
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Report {
-	int type() default 0;
-	String level() default "info";
-	String value() defalut "";
+public @interface Mapping {
+    String name();
+    String[] path() default {};
+    Type type() default Type.GET;
 }
 ```
 
-**@Documented**  
+在程序执行期间通过 JVM 可以获取 `Mapping` 注解。
 
-使用 `@Documented` 定义的注解表明这个注解应该被 `javadoc` 工具记录，默认情况下，`javadoc` 是不包括注解的，但如果声明注解时指定了 `@Documented`，则它会被 `javadoc` 之类的工具处理，所以注解类型信息也会被包括在生成的文档中，是一个标记注解，没有成员。
+#### @Target
+
+--缓存--
+
+从 JDK 8 开始，Java 扩展了可以使用注解的地方。如前所示，最早的注解只能应用于声明。但现在，在能够使用类型的大多数地方，也可以指定注解。扩展后的这种注解称为类型注解。例如，可以注解方法的返回类型、方法内this的类型、强制转换、数组级别、被继承的类以及 throws 子句。还可以注解泛型，包括泛型类型参数边界和泛型类型参数。
+
+--缓存--
+
+`@Target` 定义注解的声明类型，用来决定注解应用的位置，如类、方法、变量、参数以及包等。而定义的类型封装在 `java.lang.annotation.ElementType` 枚举中。如下所示：
+
+- `ElementType.ANNOTATION_TYPE`    注解类型声明。
+- `ElementType.CONSTRUCTOR`    构造器声明。
+- `ElementTyoe.FIELD`    域变量声明。
+- `ElementType.LOCAL_VARIABLE`    局部变量声明。
+- `ElementType.METHOD`    方法声明。
+- `ElementType.PACKAGE`    包声明。
+- `ElementType.PARAMETER`    参数声明。
+- `ElementType.TYPE`    类、接口或者枚举声明。
+- `ElementType.TYPE_PARAMETER`    类型参数。
+- `ElementType.TYPE_USE`    类型使用。
+
+如下所示，定义的注解 `@Mapping` 可用在方法上：
+
+```java
+@Target(ElementType.METHOD)
+public @interface Mapping {
+    String name();
+    String[] path() default {};
+    Type type() default Type.GET;
+}
+```
+
+在 `@Target` 注解中也可以指定多个值，并用 `{}` 包围起来。如下所示：
+
+```java
+@Target({
+    ElementType.METHOD, 
+    ElementType.FIELD})
+public @interface Mapping {
+    String name();
+    String[] path() default {};
+    Type type() default Type.GET;
+}
+```
+
+如果不使用 `@Target`，可以应用于任何声明上。因此，一般来说，显式指定目标是个好主意，可以明确说明注解的用途。
+
+`TYPE_PARAMETER` 和 `TYPE_USE` 枚举常量都是 Java SE 8 新增加的枚举常量。类型注解必须包含 `ElementType_USE`，这样就可以注解方法的返回类型、方法内 `this` 的类型、强制转换、数组级别、被继承的类以及 `throws` 子句。还可以注解泛型，包括泛型类型参数边界和泛型类型参数。
+
+#### @Documented
+
+`@Documented` 注解是一个标记接口，用于告知某个工具注解将被文档化。`@Documented` 被设计为只能注解其他注解。
+
+默认情况下，`javadoc` 不处理注解，但在注解上标记 `@Documented`，就会被像 `javadoc` 这样的归档工具处理，以实现归档。
 
 ```java
 @Documented
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface Report {
-	int type() default 0;
-	String level() default "info";
-	String value() default "";
+@Target(ElementType.METHOD)
+public @interface Mapping {
+    String name();
+    String[] path() default {};
+    Type type() default Type.GET;
 }
 ```
 
-**@Inherited**
+#### @Inherited
 
-使用`@Inherited`定义子类是否可继承父类定义的`Annotation`。`@Inherited`仅针对`@Target(ElementType.TYPE)`类型的`Annotation`有效，并且仅针对`class`的继承，对`interface`的继承无效：
+`@Inherited` 是一个标记注解，用于另外一个注解声明。`@Inherited` 标记的注解可以被子类继承，而且只能用于被 `@Target(ElementType.TYPE)` 类型标注的注解。
+
+因此，当查询子类的特定注解时，如果那种注解在子类中不存在，就会检查超类。如果那种注解存在于超类中，并且如果使用 `@Inherited` 进行了注解，就将返回那种注解。
+
+定义一个标记了 `@Inherited` 的注解 `@Persistent` 。
 
 ```java
-@Inherited
-@Target(ElementType.TYPE)
-public @interface Report {
-	int type() default 0;
-	String level() default "info";
-	String value() default "";
+@Inherited @interface Persistent {
 }
 ```
 
-在使用的时候，如果一个类用到了`@Report`
+这里使用 `@Persistent` 注解来指明一个类的对象可以存储到数据库中。
 
 ```java
-@Report
-public class Person {}
+@Persistent public class Person {}
 ```
 
-则它的子类默认也定义了该注解：
+那么继承自 `Person` 的子类也会自动被注解为持久化。
 
 ```java
 public class Student extends Person {}
 ```
 
-**@Repeatable**
+#### @Repeatable
 
-使用元注解 `@Repeatable` 可以定义`Annotation`是否可重复（Java 8）。这个注解应用不是特别广泛。
+Java SE 8 可以使用 `@Repeatable` 注解将同种类型的注解多次应用于某一项。为保持向后兼容，可重复注解的实现者需要提供一个容器注解，它可以将这些重复注解存储到一个数组中。
 
 ```java
-@Repeatable(Reports.class)
-@Target(ElementType.TYPE)
-public @interface Report {
-	int type() default 0;
-	String level() default "info";
-	String value() default "";
+@Repeatable(Mappings.class)
+@Target(ElementType.METHOD)
+public @interface Mapping {
+    String name();
+    String path() default “”;
+    Type type() default Type.GET;
 }
-
 @Target(ElementType.Type)
-public @interface Reports {
-	Report[] value();
+public @interface Mappings {
+    Mapping[] value();
 }
 ```
 
-经过`@Repeatable`修饰后，在某个类型声明处，就可以添加多个`@Report`注解：
+经过 `@Repeatable` 修饰后，只要用户提供两个或更多 `@Mapping` 注解，那就会自动地被包装到 `@Mappings` 注解中。
 
 ```java
-@Report(type=1, level="debug")
-@Report(type=2, level="warning")
-public class Hello {
+@Mapping(name="GET Mapping", path="/profile")
+@Mapping(name="POST Mapping", path="/profile", type=Type.POST)
+public class AnnotationTest {
 }
 ```
 
-## 内置注解
+这里，使用 `getAnnotation()` 方法获取重复注解的话，需要传入的是容器注解的类，而不是重复注解本身。`AnnotatedElement` 接口还提供了 `getAnnotationsByType()` 和 `getDeclaredAnnotationsByType()` 这两个方法来直接操作重复注解。
 
-Java 5 引入了前三种定义在 `java.lang` 包中的注解：
+#### @Native
 
-- `@Override`：表示当前的方法定义将覆盖基类的方法。如果你不小心拼写错误，或者方法签名被错误拼写的时候，编译器就会发出错误提示。
-- `@Deprecated`：如果使用该注解的元素被调用，编译器就会发出警告信息。
-- `@SuppressWarnings`：关闭不当的编译器警告信息。
-- `@SafeVarargs`：在 Java 7 中加入用于禁止对具有泛型 `varargs` 参数的方法或构造函数的调用方发出警告。
-- `@FunctionalInterface`：Java 8 中加入用于表示类型声明为函数式接口
-
+使用 `@Native` 注解修饰成员变量，表示这个变量可以被本地代码引用，常常被代码生成工具使用。 `@Native` 注解不常使用。
 
 ## 注解处理
 
-Java注解本身对代码逻辑没有任何影响。因此使用注解就要创建与使用注解处理器。我们使用反射机制的 API 来编写这类工具。
+当注解指定 `RUNTIME` 保留策略时，运行时就可以通过反射API 来查询注解。反射API用到的类如 `Class`、`Field`、`Method` 以及 `Constructor` 都实现了 `AnnotatedElement` 注解接口。
 
-### 获取注解
+![](./images/10-1 AnnotatedElement.png)
 
-Java 反射API包含了许多方法来在运行时从类，方法或者其它元素获取注解。接口 `AnnotatedElement` 包含了大部分重要的方法，如下：
+该接口提供了几个方法来获取注解。其中 `getAnnotationsByType()`、`getDeclaredAnnotation()`以及`getDelaredAnnotationsByType()`方法都是 Java SE 8 新增方法。
 
-- `getAnnotations()`：返回该元素的所有注解，包括没有显式定义该元素上的注解。
-- `isAnnotationPresent(Class)`：检查传入的注解是否存在于当前元素。
-- `getAnnotation(Class)`：按照传入的参数获取指定类型的注解。返回`null`说明当前元素不带有此注解。
+### getAnnotation()
 
-上述方法都可以被 `java.lang.Class`、`java.lang.reflect.Method`、`java.lang.reflect.Field`和`java.lang.reflect.Constructor`元素调用。
-
-例如：
+`AnnotatedElement` 注解接口提供的 `getAnnotation()` 方法可以获得与对象关联的注解。该方法的一般形式如下：
 
 ```java
-// 判断`@UseCase`是否存在于`PasswordUtils`
-boolean isUseCase = PasswordUtils.class.isAnnotationPresent(UseCase.class)
-// 获取PasswordUtils定义的@UseCase注解
-UseCase useCase = PasswordUtils.class.getAnnotation(UseCase.class);
-int id = useCase.id();
-String description = useCase.description();
+<T extends Annotation> T getAnnotation(Class<T> annotationClass)
 ```
 
-使用反射API读取`Annotation`有两种方法。
-
-方法一是先判断`Annotation`是否存在，如果存在，就直接读取：
+这里的 `annotationClass` 表示你要查找的注解类型。该方法返回对注解的一个引用，使用这个引用可以获取与注解元素关联的值。如果没有找到注解，该方法会返回 `null`。下面使用该方法获取 `@Mapping` 注解。
 
 ```java
-Class cls = PasswordUtils.class
-if (cls.isAnnotationPresent(UseCase.class)) {
-	UseCase useCase = cls.getAnnotation(UseCase.class);
-	...
+Class<?> cls = AnnotationTest.class;
+cls.getAnnotation(Mapping.class);    // 获取Mapping注解
+```
+
+### getAnnotations()
+
+`AnnotatedElement` 注解接口提供的 `getAnnotations()` 方法会返回 `Class`、`Method`、`Constructor` 以及 `Field` 等类型的对象中的所有注解的一个注解数组。该方法的一般形式如下：
+
+```java
+Annotation[] getAnnotations()
+```
+
+下面使用该方法获取所有注解。
+
+```java
+Class<?> cls = AnnotationTest.class;
+cls.getAnnotations();    // 获取cls对象中的所有注解
+```
+
+### getDeclaredAnnotations()
+
+`AnnotatedElement` 注解接口提供的 `getDeclaredAnnotations()` 方法返回的是调用对象中存在的所有非继承注解。该方法的一般形式如下：
+
+```java
+Annotation[] getDeclaredAnnotations()
+```
+
+### isAnnotationPresent()
+
+`AnnotatedElement` 注解接口提供的 `isAnnotationPresent()` 方法用于判断调用对象是否存在指定的注解。该方法的一般形式如下：
+
+
+```java
+default boolean isAnnotationPresent(Class<? extends Annotation> annotationClass)`
+```
+
+如果 `annotationClass` 指定的注解与调用对象相关联，返回 `true`，否则返回 `false`。下面使用该方法判断 `@Mapping` 注解是否存在。
+
+```java
+Class<?> cls = AnnotationTest.class;
+if (cls.isAnnotationPresent(Mapping.class)) {
+    ...
 }
 ```
 
-方法二是直接读取`Annotation`，如果`Annotation`不存在，将返回`null`：
+### getDeclaredAnnotation()
+
+`AnnotatedElement` 注解接口提供的 `getDeclaredAnnotation()` 方法返回与对象关联的注解。该方法会忽略继承注解，一般形式如下：
 
 ```java
-Class cls = PasswordUtils.class;
-UseCase useCase = cls.getAnnotation(UseCase.class);
-if (useCase != null) {
-	...
-}
+default <T extends Annotation> T getDeclaredAnnotation(Class<T> annotationClass) {...}
 ```
 
-读取方法、字段和构造方法的`Annotation`和Class类似。但是读取方法参数的`Annotation`就比较麻烦一点，因为方法参数本身可以看成一个数组，而每个参数又可以定义多个注解，所以，一次获取方法的所有注解就必须用一个二维数组来表示。例如，对于以下方法定义的注解：
+这里的 `annotationClass` 与 `getAnnotation()` 的参数一样，都是表示要查找的注解类型。
+
+### getAnnotationsByType()
+
+`AnnotatedElement` 注解接口提供的 `getAnnotationsByType()` 方法用以获取与对象关联的注解。如果没有与此元素关联的注解，则返回值是长度为0的数组。该方法的一般形式如下：
 
 ```java
-public void hello(@NotNUll @Range(max=5) String name, @NotNull String prefix) {}
+default <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {...}
 ```
 
-要读取方法参数的注解，我们先用反射读取`Method`实例，然后读取方法参数的所有注解：
+该方法与 `getAnnotation(Class<T> annotationClass)` 的区别在于，检测其参数是否为可重复的注解类型。
+
+### getDeclaredAnnotationsByType()
+
+`AnnotatedElement` 注解接口提供了 `getDeclaredAnnotationsByType()` 方法。如果注解直接存在或间接存在，则返回该元素的注解，如果没有，则返回值为长度为0的数组。该方法的一般形式如下：
 
 ```java
-// 获取Method实例
-Method m = xxx.class.getDeclaredMethod("hello");
-// 获取所有参数的 Annotation
-Annotation[][] annos = m.getParameterAnnotations();
-// 第一个参数（索引为0）的所有Annotation
-Annotation[] annosOfName = annos[0];
-for (Annotation anno : annosOfName) {
-	if (anno instanceof Range) {	// @Range注解
-		Range range = (Range) anno;	
-	}
-	if (anno instanceof NotNull) {	// @NotNull注解
-		NotNull notNull = (NotNull) anno;
-	}
-}
+default <T extends Annotation> T[] getDeclaredAnnotationsByType(Class<T> annotationClass) {...}
 ```
 
-### 注解元素
+此方法忽略继承的注解，而且与 `getDeclaredAnnotation(Class<T> annotationClass)` 的区别在于，检测其参数是否为可重复的注解类型。
 
-在 `UseCase.java` 中定义的 `@UseCase` 的标签包含 int 元素 `id` 和 `String` 元素 `description`。注解元素可用的类型如下所示：
+## 总结
 
-简单的总结注解元素：
-
-- 属性是以方法的形式定义的，属性名即方法名。
-- 属性可用类型为：基本类型（int、float、boolean等）、String、Class、enum、Annotation和以上类型的数组。
-- 可以设置默认值，那么当使用该注解的时候，不指定该属性的值则使用默认值；但设置默认值时不能使用`null`赋值，要绕开这个约束，可以自定义一些特殊的值，比如空字符串或者负数用于表达某个元素不存在。。
-- 没有默认值的，使用时必须赋值。
-- 若只有一种属性，且名为`value`，则赋值时可以不指定属性名
-- 同样的只有一个一维数组`value[]`，则赋值时可以不指定属性名
-
-如果你使用了其它类型，编译器会报错。注意，也不允许使用任何包装类型，但是由于自动装箱的存在，也不算什么限制。注解也可以作为元素的类型（注解嵌套是一个非常有用的技巧）。
-
-
-### 注解不支持继承
-
-你不能使用 `extends` 关键字来继承 `@interface`。但注解在编译后，编译器会自动继承 `java.lang.annotation.Annotation` 接口。
-
-
-### 实现处理器
-
-下面是一个非常简单的注解处理器，我们用来读取被注解的 `PasswordUtils` 类，并且使用反射机制来寻找 `@UseCase` 标记。给定一组 `id` 值，然后列出在 `PasswordUtils` 中找到的用例，以及缺失的用例。
-
-```java
-public class UseCaseTracker {
-    public static void trackUseCases(List<Integer> useCases, Class<?> cl) {
-        for (Method m : cl.getDeclaredMethods()) {
-            UseCase uc = m.getAnnotation(UseCase.class);
-            if (uc != null) {
-                System.out.println("Found Use Case " +
-                        uc.id() + "\n" + uc.description());
-                useCases.remove(Integer.valueOf(uc.id()));
-            }
-        }
-        useCases.forEach(i ->
-                System.out.println("Missing use case " + i));
-    }
-
-    public static void main(String[] args) {
-        List<Integer> useCases = IntStream.range(47, 51).boxed().collect(Collectors.toList());
-        trackUseCases(useCases, PasswordUtils.class);
-    }
-}
-```
-
-输出为：
-
-```shell
-Found Use Case 49
-New passwords can't equal previously used ones
-Found Use Case 47
-Passwords must cantain at least one numeric
-Found Use Case 48
-no description
-Missing use case 50
-```
-
-这个程序用了两个反射的方法： `getDeclaredMethods()` 和 `getAnnotation()` ，它们都属于 `AnnotatedElement` 接口（`Class`，`Method` 与 `Field` 类都实现了该接口）。`getAnnotation()` 方法返回指定类型的注解对象，在本例中就是 "UseCase"。如果被注解的方法上没有该类型的注解，返回值就为 `null`。我们通过调用 `id()` 和 `description()` 方法来提取元素值。注意 `encryptPassword()` 方法在注解的时候没有指定 `descrpiton()` 的值，因此处理器在处理它对应的注解时，通过 `description()` 取的的是默认值 "no description"。
+通过注解，可以在不影响代码语义的情况下，提供了其描述信息，这些信息能够被外部工具自动处理。可以通过反射API获取注解，并进行操作。文档生成、编译检查、动态处理等方面都可以使用注解。
