@@ -14,7 +14,7 @@ Java SE 5 引入了许多的语言变化，注解（元数据）就是其中之�
 
 当 `Mapping` 注解中只需要一个注解元素时，可以将名称设成 `value`，这样指定值时就不需要指定注解元素的名称了。如 `@Mapping("get")`。
 
-注解中可以设置注解元素，看起来就像接口的方法，但是可以为其指定默认值。如 `String[] path() default {}`。注解中的元素类型可以使用基本类型、`String`、`Class`、`enum`、注解类型以及前面所述类型组成的数组。而且可以使用 `default` 为注解元素提供默认值。如上所示的 `String[] path() default {}` 就是设置了默认值的注解元素。
+注解中的元素类型可以使用基本类型、`String`、`Class`、`enum`、注解类型以及前面所述类型组成的数组。而且可以使用 `default` 为注解元素提供默认值。如上所示的 `String[] path() default {}` 就是设置了默认值的注解元素。
 
 ## 注解声明
 
@@ -32,7 +32,7 @@ Java SE 5 引入了许多的语言变化，注解（元数据）就是其中之�
 
 Java SE 提供了许多注解，但其中大部分是专用注解。其中有规则注解和元注解。
 
-- `@Deprecated`    该注解用于标记不想被使用的项上。当使用 `@Deprecated` 标记时，编译器就会发出警告。这个注解与 `Javadoc` 标签 `@Deprecated` 具有同等功效。
+- `@Deprecated`    该注解用于标记不想被使用的项上。当使用 `@Deprecated` 标记时，编译器就会发出警告。这个注解与 `Javadoc` 标签 `@deprecated` 具有同等功效。
 - `@SuppressWarnings`    该注解会告知编译器阻止特定类型的警告信息。如 `@SuppressWarnings("unchecked")`。
 - `@Override`    该注解只能应用于方法上， 表示当前的方法定义将覆盖基类的方法。假如你的类中重写 `equals(Object obj)` 方法时，就可以使用 `@Override` 注解标记。不是被覆盖的方法就不要用 `@Override`，那样编译器会报错。
 - `@SafeVarargs`    该注解用于对具有泛型 `varargs` 参数可安全使用。作用于方法或构造器上。该注解为 Java SE 7 新增注解。
@@ -68,12 +68,6 @@ public @interface Mapping {
 在程序执行期间通过 JVM 可以获取 `Mapping` 注解。
 
 #### @Target
-
---缓存--
-
-从 JDK 8 开始，Java 扩展了可以使用注解的地方。如前所示，最早的注解只能应用于声明。但现在，在能够使用类型的大多数地方，也可以指定注解。扩展后的这种注解称为类型注解。例如，可以注解方法的返回类型、方法内this的类型、强制转换、数组级别、被继承的类以及 throws 子句。还可以注解泛型，包括泛型类型参数边界和泛型类型参数。
-
---缓存--
 
 `@Target` 定义注解的声明类型，用来决定注解应用的位置，如类、方法、变量、参数以及包等。而定义的类型封装在 `java.lang.annotation.ElementType` 枚举中。如下所示：
 
@@ -136,7 +130,7 @@ public @interface Mapping {
 
 `@Inherited` 是一个标记注解，用于另外一个注解声明。`@Inherited` 标记的注解可以被子类继承，而且只能用于被 `@Target(ElementType.TYPE)` 类型标注的注解。
 
-因此，当查询子类的特定注解时，如果那种注解在子类中不存在，就会检查超类。如果那种注解存在于超类中，并且如果使用 `@Inherited` 进行了注解，就将返回那种注解。
+因此，当查询子类的特定注解时，如果那种注解在子类中不存在，就会检查基类。如果那种注解存在于超类中，并且如果使用 `@Inherited` 进行了注解，就将返回那种注解。
 
 定义一个标记了 `@Inherited` 的注解 `@Persistent` 。
 
@@ -272,7 +266,7 @@ default <T extends Annotation> T getDeclaredAnnotation(Class<T> annotationClass)
 default <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {...}
 ```
 
-该方法与 `getAnnotation(Class<T> annotationClass)` 的区别在于，检测其参数是否为可重复的注解类型。
+该方法与 `getAnnotation(Class<T> annotationClass)` 的区别在于，检测其注解对应的重复注解容器。
 
 ### getDeclaredAnnotationsByType()
 
@@ -282,7 +276,7 @@ default <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass
 default <T extends Annotation> T[] getDeclaredAnnotationsByType(Class<T> annotationClass) {...}
 ```
 
-此方法忽略继承的注解，而且与 `getDeclaredAnnotation(Class<T> annotationClass)` 的区别在于，检测其参数是否为可重复的注解类型。
+此方法忽略继承的注解，而且与 `getDeclaredAnnotation(Class<T> annotationClass)` 的区别在于，检测其参数是否为可重复的注解类型，如果是，尝试查看重复注解容器来查找该类型的一个或多个注解。
 
 ## 总结
 
