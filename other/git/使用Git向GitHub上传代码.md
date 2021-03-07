@@ -50,7 +50,7 @@ git add * 加入所有项目
 git status // 检查状态 如果都是绿的 证明成功 
 git commit -m "first commit" // 提交到本地仓库，并写一些注释 
 git remote add origin git@github.com:yourname/test.git // (git@github.com:rrenhai910502500/Test.git为SSH地址，在GitHub上复制)命令将本地仓库与远程仓库取得关联 
-git push -u origin master //该命令将本地仓库的代码push到GItHub。
+git push -u origin master //该命令将本地仓库的代码push到GitHub。
 ```
 
 或者从命令行推送现有的存储库
