@@ -229,5 +229,316 @@ LocalTime time = LocalTime.parse("9:32 AM", formatter);
 
 警告：日期格式器可以解析不存在的日期，例如 November 31，它会将这种日期调整为给定月份的最后一天。
 
-316页
+有时，你需要显示星期和月份的名字，例如在日历应用中。此时可以调用 DayOfWeek 和 Month 枚举的 getDisplayName 方法：
 
+```java
+for (Month m : Month.values())
+    System.out.println(m.getDisplayName(textStyle, locale) + " ");
+```
+
+下表展示了文本风格，其中 STANDALONE 版本用于格式化日期之外的显示。例如，在芬兰语中，一月在日期中是 “tammikuuta”，但是单独显示时是 “tammikuu”。
+
+|风格|示例|
+|:---:|:---:|
+|FULL/FULL_STANDALONE|January|
+|SHORT/SHORT_STANDALONE|Jan|
+|NARROW/NARROW_STANDALONE|J|
+
+注意：星期的第一天可以是星期六、星期日或星期一，这取决于 Locale。你可以像下面这样获取星期的第一天：
+
+```java
+DayOfWeek first = WeekFields.of(locale).getFirstDayOfWeek();
+```
+
+## 排序和范化
+
+大多数程序员都知道如何使用 String 类中的 compareTo 方法对字符串进行比较。但是，当与人类用户交互时，这个方法就不是很有用了。compareTo 方法使用的是字符串的 UTF-16 编码值，这会导致很荒唐的结果，即使在英文比较中也是如此。比如，下面的 5 个字符串进行排序的结果为：
+
+```
+America
+Zulu
+able
+zebra
+Angstrom
+```
+
+按照字典中的顺序，你希望将大写和小写看作是等价的。对于一个说英语的读者来说，期望的排序结果应该是：
+
+```java
+able
+America
+Angstrom
+zebra
+Zulu
+```
+
+但是，这种顺序对于瑞典用户是不可接受的。在瑞典语中，字母 和 字母 A 是不同的，它应该排在字母 Z 之后！就是说，瑞典用户希望的排序结果是：
+
+```java
+able
+America
+zebra
+Zulu
+Angstrom
+```
+
+为了获得 Locale 敏感的比较复杂，可以调用静态的 Collator.getInstance 方法：
+
+```java
+Collator coll = Collator.getInstance(locale);
+mords.sort(coll);    // Collator implements Comparator<Object>
+```
+
+因为 Collator 类实现了 Comparator 接口。因此，可以传递一个 Collator 对象给 list.sort(Comparator) 方法来对一组字符串进行排序。
+
+排序器有几个高级设置项。你可以设置排序器的强度以此来选择不同的排序行为。字符间的差别可以被分为首要的 primary、次要的 secondary 和再次的 tertiary。比如，在英语中，“A” 和 “Z” 之间的差别被归为首要的，而 “A” 和 “” 之间的差别是其次的，“A” 和 “a” 之间是再次的。
+
+如果将排序器的强度设置成 Collator.PRIMARY，那么排序器将只关注 primary 级的差别。如果设置成 Collator.SECONDARY，排序器将把 secondary 级的差别也考虑进去。就是说，两个字符串在 “secondary” 或 “tertiary” 强度下更容易被区分开来。如下表所示。
+
+如果强度被设置为 Collator.IDENTICAL，则不允许有任何差异。这种设置在于排序器的第二种具有相当技术性的设置，即分解模式，联合使用时，就会显得非常有用。
+
+## 消息格式化
+
+Java 类库中有一个 MessageFormat 类，它与用 printf 方法进行格式化很类似，但是它支持 Locale，并且会对数字和日期进行格式化。我们将在以下各节中审视这种机制。
+
+### 格式化数字和日期
+
+下面是一个典型的消息格式化字符串：
+
+```
+"On {2}, a {0} destroyed {1} houses and caused {3} of damage."
+```
+
+括号中的数字是占位符，可以用实际的名字和值来替换它们。使用静态方法 MessageFormat.format 可以用实际的值来替换这些占位符。它是一个 “varargs” 方法，所以你可以通过下面的方法提供参数：
+
+```java
+String msg = MessageFormat.format("On {2}, a {0} destroyed {1} houses and caused {3} of damage.", "hurricane", 99, new GregorianCalendar(1999, 0, 1).getTime(), 10.0E8);
+```
+
+在这个例子中，占位符 {0} 被 “hurricane” 替换，{1} 被 99 替换，等等。
+
+上述例子的结果是下面的字符串：
+
+On 1/1/99 12:00 AM, a hurricane destroyed 99 houses and caused 100,000,000 of damage.
+
+这只是开始，离完美还有距离。我们不想将时间显示为 “12:00 AM”，而且我们想将造成的损失量打印成货币值。通过为占位符提供可选的格式，就可以做到这一点：
+
+On {2, date, long}, a {0} destroyed {1} houses and caused {3, number, currency} of damage.
+
+
+这段示例代码将打印出：
+
+On January 1, 1999, a hurricane destroyed 99 houses and caused $100,000,000 of damage.
+
+一般来说，占位符索引后面可以跟一个类型（type）和一个风格（style），它们之间用逗号隔开。类型可以是：
+
+```
+number
+time
+date
+choice
+```
+
+如果类型是 number，那么风格可以是
+
+```
+integer
+currency
+percent
+```
+
+或者可以是数字格式模式，就像 $$,##0。
+
+如果类型是 time 或 date，那么风格可以是
+
+```
+short
+medium
+long
+full
+```
+
+或者是一个日期格式模式，就像 yyyy-MM-dd。
+
+警告：静态的 MessageFormat.format 方法使用当前的 locale 对值进行格式化。要想用任意的 locale 进行格式化，还有一些工作要做，因为这个类还没有提供任何可以使用的 “varargs” 方法。你需要把将要格式化的值置于 Object[] 数组中，就像下面这样：
+
+```java
+MessageFormat mf = new MessageFormat(pattern, loc);
+String msg = mf.format(new Object[] {values});
+```
+
+### 选择格式
+
+让我们仔细地看看前面一节所提到的模式：
+
+"On {2}, a {0} destroyed {1} houses and caused {3} of damage."
+
+如果我们用 “ earthquake” 来替换代表灾难的占位符 {0}，那么，在英语中，这句话的语法就不正确了。
+
+On January 1, 1999, a earthquake destroyed ...
+
+这说明，我们真正希望的是将冠词 “a” 集成到占位符中去：
+
+"On {2}, {0} destroyed {1} houses and caused {3} of damage."
+
+这样我们就应该用 “ a hurricane” 或 “an earthquake” 来替换 {0}。当消息需要被翻译成某种语言，而该语言中的词会随词性的变化而变化时，这种替换方式就特别适用。比如，在德语中，模式可能会是：
+
+"{0} zerstorte am {2} {1} Hauser und richtete einen Schaden von {3} an."
+
+这样，占位符将被正确地替换成冠词和名词的组合，比如 “Ein Wirbelsturm”, "Eine Naturkatastrophe"。
+
+让我们来看看参数 {1}。如果灾难的后果不严重，{1} 的替换值可能是数字 1，消息就编程：
+
+ON January 1, 1999, a mudslide destroyed 1 houses and ...
+
+我们当然希望消息能够随占位符的值而变化，这样就能根据具体的值形成
+
+no houses
+one house
+2 houses
+...
+
+choice 格式化选项就是为了这个目的而设计的。
+
+一个选择格式是一个序列对构成的，每一个对包括
+
+- 一个下限（lower limit）
+- 一个格式字符串（format string）
+
+下限和格式字符串由一个 # 符号分隔，对于对之间由符号 | 分隔。
+
+例如：
+
+{1, choice,0#no houses|1#one house|2#{1} houses}
+
+下表显示了格式字符串对 {1} 的不通知产生的作用。
+
+## 文本文件和字符集
+
+### 文本文件
+
+### 行结束符
+
+### 控制台
+
+### 日志文件
+
+### UTF-8 字符顺序标志
+
+### 源文件的字符编码
+
+## 资源包
+
+当本地化一个应用时，可能会有大量的消息字符串、按钮标签和其他的东西需要被翻译。为了能灵活地完成这项任务，你会希望在外部定义消息字符串，通常称之为资源（resource）。翻译人员不需要解除程序源代码就可以很容易地编辑资源文件。
+
+注意：Java 技术资源和 Windows 和 Macintosh 资源不同。Macintosh 或 Windows 可执行文件在程序代码以外的地方存储类似菜单、对话框、图标和消息这样的资源。资源编辑器能够在不影响程序代码的情况下检查并更新这些资源。
+
+### 定义资源包
+
+当本地化一个应用时，会产生很多资源包（resource bundle）。每一个包都是一个属性文件或者是一个描述了与 locale 相关的项的类（比如消息、标签等）。对于每一个包，都要为所有你想要支持的 locale 提供相应的版本。
+
+需要对这些包使用一种统一的命名规则。例如，为德国定义的资源放在一个名为 “包名_de_DE” 的文件中，而为所有说德语的国家所共享的资源则放在名为 “包名_de” 的文件中。一般来说，使用
+
+包名_语言_国家
+
+来命名所有和国家相关的资源，使用
+
+包名_语言
+
+来命名所有和语言相关的的资源。最后，作为后备，可以把默认资源放在一个没有后缀的文件中。
+
+可以用下面的命令加载一个包
+
+```java
+ResourceBundle currentResources = ResourceBundle.getBundle(bundleName, currentLocale);
+```
+
+getBundle 方法试图加载匹配当前 locale 定义的语言和国家的包。如果失败，通过依次放弃国家和语言来继续进行查找，然后同样的查找被应用于默认的 locale，最后，如果还不行的话就去查看默认的包文件，如果这也失败了，则抛出一个 MissingResourceException 异常。
+
+这就是说，getBundle 方法会视图加载以下的包。
+
+包名_当前Locale的语言_当前Locale的国家_当前Locale的变量
+包名_当前Locale的语言_当前Locale的国家
+包名_当前Locale的语言
+包名_默认Locale的语言_当前Locale的国家_当前Locale的变量
+包名_默认Locale的语言_当前Locale的国家
+包名_默认Locale的语言
+包名
+
+一旦 getBundle 方法定位了一个包，比如，包名_de_DE，它还会继续查找包名_de 和包名这两个包。如果这些包也存在，它们在资源层次中就成为了包名_de_DE 的父包。以后，当查找一个资源时，如果在当前包中没有找到，就去查找其父包。就是说，如果一个特定的资源在当前包中没有被找到，比如，某个特定资源在包名_de_DE 中没有找到，那么就会去查询包名_de 和包名。
+
+这是一项非常有用的服务，如果手工来编写将会非常麻烦。Java 编程语言的资源包机制会自动定位与给定的 locale 匹配得最好的项。可以很容易地把越来越多的本地化信息加到已有的程序中：你需要做的只是增加额外的资源包。
+
+### 属性文件
+
+对字符串进行国际化是很直接的，你可以把所有字符串放到一个属性文件中，比如 MyProgramStrings.properties，这是一个每行存放一个键-值对的文本文件。典型的属性文件看起来就像这样：
+
+```properties
+computeButton=Rechnen
+colorName=black
+defaultPaperSize=210x297
+```
+
+然后你就像上一节描述的那样命名你的属性文件。例如
+
+```
+MyProgramStrings.properties
+MyProgramStrings_en.properties
+MyProgramStrings_de_DE.properties
+```
+
+你可以直接加载包，如
+
+```java
+ResourceBundle bundle = ResourceBundle.getBundle("MyProgramStrings", locale);
+```
+
+要查找一个具体的字符串，可以调用
+
+```java
+String computeButtonLable = bundle.getString("computeButton");
+```
+
+### 包类
+
+为了提供字符串以外的资源，需要定义类，它必需扩展自 ResourceBundle 类。应该使用标准的命名规则来命名你的类，比如
+
+```
+MyProgramResources.java
+MyProgramResources_en.java
+MyProgramResources_de_DE.java
+```
+
+你可以使用与加载属性文件相同的 getBundle 方法来加载这个类：
+
+```java
+ResourceBundle bundle = ResourceBundle.getBundle("MyProgramResources", locale);
+```
+
+警告：当搜索包时，如果在类中的包和在属性文件中的包中都存在匹配，优先选择类中的包。
+
+每一个资源包类都实现了一个查询表。你需要为每一个你想定位的而设置都提供一个关键字字符串，使用这个字符串来提取相应的设置。例如，
+
+```java
+Color backgroundColor = (Color) bundle.getObject("backgroundColor");
+double[] paperSize = (double[]) bundle.getObject("defaultPaperSize");
+```
+
+实现资源包类的最简单方法就是继承 ListResourceBundle 类。ListResourceBundle 让你把所有资源都放到一个对象数组中并提供查找功能。要遵循以下的代码框架：
+
+```java
+
+```
+
+或者，你的资源包类可以扩展 ResourceBundle 类。然后需要实现两个方法，一是枚举所有键，二是用给定的键查找相应的值：
+
+```java
+Enumeration<String> getKeys();
+Object handleGetObject(String key);
+```
+
+ResourceBundle 类的 getObject 方法会调用你提供的 handleGetObject 方法。
+
+336页
+
+java.util 包提供了 3 个用来帮助国际化程序的类。第 1 个是抽象类 ResourceBundle。该类定义的方法用于管理地区敏感资源的集合，例如用于显示程序中用户界面元素的字符串。可以定义两套或更多套用于支持各种语言的翻译过的字符串，比如英语、德语或汉语，每套翻译过的字符串都在自己的资源包中。然后可以加在适用于当前地区的资源包，并使用其中的字符串构造程序的用户界面。
