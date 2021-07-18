@@ -50,7 +50,7 @@ Java 编程语言是第一种设计成为全面支持国际化的语言。从一
 
 locale 的规则是在 Internet Engineering Task Force 的 “Best Current Practices” 备忘录 BCP47 进行了明确阐述。
 
-语言和国家的代码看起来有点乱，因为它们中的有些是从本地语言导出的。德语在德语中是 Dcutsch，中文在中文里时 zhongwen，因此它们分别时 de 和 zh。瑞士是 CH，这是从瑞士联邦的拉丁语 Confoederatio Helvetica 中导出的。
+语言和国家的代码看起来有点乱，因为它们中的有些是从本地语言导出的。德语在德语中是 Dcutsch，中文在中文里是 zhongwen，因此它们分别时 de 和 zh。瑞士是 CH，这是从瑞士联邦的拉丁语 Confoederatio Helvetica 中导出的。
 
 locale 是用标签描述的，标签是由 locale 的各个元素通过连字符连接起来的字符串，例如 en-US。
 
@@ -540,5 +540,3 @@ Object handleGetObject(String key);
 ResourceBundle 类的 getObject 方法会调用你提供的 handleGetObject 方法。
 
 336页
-
-java.util 包提供了 3 个用来帮助国际化程序的类。第 1 个是抽象类 ResourceBundle。该类定义的方法用于管理地区敏感资源的集合，例如用于显示程序中用户界面元素的字符串。可以定义两套或更多套用于支持各种语言的翻译过的字符串，比如英语、德语或汉语，每套翻译过的字符串都在自己的资源包中。然后可以加在适用于当前地区的资源包，并使用其中的字符串构造程序的用户界面。
