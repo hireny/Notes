@@ -2,16 +2,19 @@
 
 ## Locale
 
-`java.util` 包中提供了 `Locale` 类用来处理不同的语言和区域上的国家化问题。而 `Locale` 类提供了如下构造方法来构造 `Locale` 对象。
+`java.util` 包中提供了 `Locale` 类用来处理不同的语言和区域上的国际化问题。使用 `Locale` 类可以定制一个区域的信息，而 `Locale` 类提供了如下构造方法来构造 `Locale` 对象。
 
 ```java
 public final class Locale implements Cloneable, Serializable {
+    // 从语言，国家和变体构造语言环境
     public Locale(String language, String country, String variant) {
         ···
     }
+    // 从语言和国家构造语言环境
     public Locale(String language, String country) {
         ···
     }
+    // 从语言代码构造语言环境
     public Locale(String language) {
         ···
     }
@@ -20,46 +23,93 @@ public final class Locale implements Cloneable, Serializable {
 
 预定义了大量的 `Locale` 语言，他们只设定了语言而没有设定国家，如下所示。
 
-|语言常量|描述|语言常量|描述|
-|:---:|:---:|:---:|:---:|
-|CHINESE|汉语|ENGLISH|英语|
+```java
+// 英语
+public static final Locale ENGLISH = createConstant("en", "");
+// 法语
+public static final Locale FRENCH = createConstant("fr", "");
+// 德语
+public static final Locale GERMAN = createConstant("de", "");
+// 意大利语
+public static final Locale ITALIAN = createConstant("it", "");
+// 日语
+public static final Locale JAPANESE = createConstant("ja", "");
+// 韩语
+public static final Locale KOREAN = createConstant("ko", "");
+// 汉语
+public static final Locale CHINESE = createConstant("zh", "");
+// 简体中文
+public static final Locale SIMPLIFIED_CHINESE = createConstant("zh", "CN");
+// 繁体中文
+public static final Locale TRADITIONAL_CHINESE = createConstant("zh", "TW");
+```
+
+Locale 中也为各个国家预定义了 Locale 对象，如下所示。
 
 ```java
-/** Useful constant for language.
-     */
-    public static final Locale ENGLISH = createConstant("en", "");
+// 法国
+public static final Locale FRANCE = createConstant("fr", "FR");
+// 德国
+public static final Locale GERMANY = createConstant("de", "DE");
+// 意大利
+public static final Locale ITALY = createConstant("it", "IT");
+// 日本
+public static final Locale JAPAN = createConstant("ja", "JP");
+// 韩国
+public static final Locale KOREA = createConstant("ko", "KR");
+// 中国
+    public static final Locale CHINA = SIMPLIFIED_CHINESE;
+// 中华人名共和国
+public static final Locale PRC = SIMPLIFIED_CHINESE;
+// 台湾
+public static final Locale TAIWAN = TRADITIONAL_CHINESE;
+// 英国
+public static final Locale UK = createConstant("en", "GB");
+// 美国
+public static final Locale US = createConstant("en", "US");
+// 加拿大
+public static final Locale CANADA = createConstant("en", "CA");
+// 法国裔加拿大
+public static final Locale CANADA_FRENCH = createConstant("fr", "CA");
+// 表示根语言环境的常量
+public static final Locale ROOT = createConstant("", "");
+```
 
-    /** Useful constant for language.
-     */
-    public static final Locale FRENCH = createConstant("fr", "");
-
-    /** Useful constant for language.
-     */
-    public static final Locale GERMAN = createConstant("de", "");
-
-    /** Useful constant for language.
-     */
-    public static final Locale ITALIAN = createConstant("it", "");
-
-    /** Useful constant for language.
-     */
-    public static final Locale JAPANESE = createConstant("ja", "");
-
-    /** Useful constant for language.
-     */
-    public static final Locale KOREAN = createConstant("ko", "");
-
-    /** Useful constant for language.
-     */
-    public static final Locale CHINESE = createConstant("zh", "");
-
-    /** Useful constant for language.
-     */
-    public static final Locale SIMPLIFIED_CHINESE = createConstant("zh", "CN");
-
-    /** Useful constant for language.
-     */
-    public static final Locale TRADITIONAL_CHINESE = createConstant("zh", "TW");
+```java
+// 此方法返回所有已安装的语言环境的数组
+static Locale[] getAvailableLocales() {}
+// 此方法回去默认语言环境的当前值的 Java 虚拟机实例
+staitc Locale getDefault();
+// 此方法返回适合显示给用户的名称语言环境的国家
+String getDisplayCountry();
+// 此方法返回适合显示给用户的名称语言环境的国家
+String getDisplayCountry(Locale inLocale);
+// 此方法返回的语言环境语言适合于显示给用户的名称
+String getDisplayLanguage();
+// 此方法返回的语言环境语言适合于显示给用户的名称
+String getDisplayLanguage(Locale inLocale);
+// 此方法返回的语言环境，是否适合显示给用户的名称。
+String getDisplayName();
+// 此方法返回的语言环境，是否适合显示给用户的名称。
+String getDisplayName(Locale inLocale);
+// 此方法返回的语言环境变量代码，适合显示给用户的名称。
+String getDisplayVariant();
+// 此方法返回的语言环境变量代码，适合显示给用户的名称。
+String getDisplayVariant(Locale inLocale)
+// 此方法返回一个三个字母的缩写本地区的国家。
+String getISO3Country() 
+// 此方法返回返回一个三字母缩写在这个地方的语言。
+String getISO3Language() 
+// 这个方法返回ISO 3166中定义的所有2个字母的国家代码的列表。
+static String[] getISOCountries() 
+// 这个方法返回ISO 639中定义的所有两字母语言代码的列表。
+static String[] getISOLanguages();
+// 此方法返回语言代码为这个区域设置，它要么是空字符串或小写的ISO639代码
+String getLanguage();
+// 此方法返回的变量代码为这个区域设置。
+String getVariant();
+// 此方法设置的默认语言环境的Java虚拟机实例
+static void setDefault(Locale newLocale);
 ```
 
 Java 7 提供了下面这样使用标签字符串构建 `Locale` 对象的方法：
@@ -67,73 +117,6 @@ Java 7 提供了下面这样使用标签字符串构建 `Locale` 对象的方法
 ```java
 Locale usEnglish = Locale.forLanguageTag("en-US");
 ```
-
-```java
-
-    /** Useful constant for country.
-     */
-    public static final Locale FRANCE = createConstant("fr", "FR");
-
-    /** Useful constant for country.
-     */
-    public static final Locale GERMANY = createConstant("de", "DE");
-
-    /** Useful constant for country.
-     */
-    public static final Locale ITALY = createConstant("it", "IT");
-
-    /** Useful constant for country.
-     */
-    public static final Locale JAPAN = createConstant("ja", "JP");
-
-    /** Useful constant for country.
-     */
-    public static final Locale KOREA = createConstant("ko", "KR");
-
-    /** Useful constant for country.
-     */
-    public static final Locale CHINA = SIMPLIFIED_CHINESE;
-
-    /** Useful constant for country.
-     */
-    public static final Locale PRC = SIMPLIFIED_CHINESE;
-
-    /** Useful constant for country.
-     */
-    public static final Locale TAIWAN = TRADITIONAL_CHINESE;
-
-    /** Useful constant for country.
-     */
-    public static final Locale UK = createConstant("en", "GB");
-
-    /** Useful constant for country.
-     */
-    public static final Locale US = createConstant("en", "US");
-
-    /** Useful constant for country.
-     */
-    public static final Locale CANADA = createConstant("en", "CA");
-
-    /** Useful constant for country.
-     */
-    public static final Locale CANADA_FRENCH = createConstant("fr", "CA");
-
-    /**
-     * Useful constant for the root locale.  The root locale is the locale whose
-     * language, country, and variant are empty ("") strings.  This is regarded
-     * as the base locale of all locales, and is used as the language/country
-     * neutral locale for the locale sensitive operations.
-     *
-     * @since 1.6
-     */
-    public static final Locale ROOT = createConstant("", "");
-```
-
-`Locale` 中也为各个国家预定义了 `Locale` 对象，如下所示。
-
-|国家常量|描述|国家常量|描述|
-|:---:|:---:|:---:|:---:|
-|LCHINA|中国|US|美国|
 
 `getAvailableLocale` 方法会返回由 Java VM 所能够识别的所有 `Locale` 构成的数组。
 
@@ -153,15 +136,11 @@ static Locale getDefault();
 
 Java 中本地化一个应用，会产生很多资源包，每一个包都是一个属性文件或者是一个描述了与 `locale` 相关的项的类。对于每一个包，都要为所有你想要支持的 `locale` 提供相应的版本。
 
-Java 提供了 `ResourceBundle` 工具类来读取不同语言环境对应的资源文件。
-
-然后使用 `ResourceBundle` 类直接加载包：
+Java 可以在 `resources` 资源包中为不同的 `locale` 设置对应的资源文件，然后使用 `ResourceBundle` 类进行加载。如下所示，通过 `ResourceBundle` 类提供的 `getBundle` 静态方法，来根据 `locale` 自动绑定对应的资源文件。
 
 ```java
 ResourceBundle bundle = ResourceBundle.getBundle("message", locale);
 ```
-
-`ResourceBundle` 类提供的静态方法 `getBundle`，会根据来访者的国家地区自动绑定对应的资源文件。
 
 查找一个具体的字符串，可以调用
 
@@ -241,6 +220,8 @@ Object handleGetObject(String key);
 `ResourceBundle` 类的 `getObject` 方法会调用你提供的 `handleGetObject` 方法。
 
 ----------------------------------------------------------
+
+### 扩展
 
 java.util 包提供了 3 个用来帮助国际化程序的类。第 1 个是抽象类 ResourceBundle。该类定义的方法用于管理地区敏感资源的集合，例如用于显示程序中用户界面元素的字符串。可以定义两套或更多套用于支持各种语言的翻译过的字符串，比如英语、德语或汉语，每套翻译过的字符串都在自己的资源包中。然后可以加在适用于当前地区的资源包，并使用其中的字符串构造程序的用户界面。
 
